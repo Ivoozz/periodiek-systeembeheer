@@ -14,9 +14,10 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(title="Periodiek Systeembeheer")
 
 # Static files & Templates
-os.makedirs("app/static/uploads", exist_ok=True)
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
-templates = Jinja2Templates(directory="app/templates")
+BASE_DIR = "/var/www/systeembeheer"
+os.makedirs(f"{BASE_DIR}/app/static/uploads", exist_ok=True)
+app.mount("/static", StaticFiles(directory=f"{BASE_DIR}/app/static"), name="static")
+templates = Jinja2Templates(directory=f"{BASE_DIR}/app/templates")
 
 # Context processor voor globale instellingen (logo, header, footer)
 @app.middleware("http")

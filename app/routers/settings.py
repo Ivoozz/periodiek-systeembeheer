@@ -10,7 +10,7 @@ from app.schemas import SystemSettingsResponse
 
 router = APIRouter(prefix="/settings", tags=["Settings"])
 
-UPLOAD_DIR = "app/static/uploads"
+UPLOAD_DIR = "/var/www/systeembeheer/app/static/uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 @router.get("/", response_model=SystemSettingsResponse)

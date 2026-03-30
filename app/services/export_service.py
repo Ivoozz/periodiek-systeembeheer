@@ -8,17 +8,15 @@ from io import BytesIO
 class ExportService:
     @staticmethod
     def generate_word_report(report: Report, customer: User):
-        # Zoek naar het template bestand
-        template_path = "app/templates/exports/template.docx"
+        # Absoluut pad voor productie
+        template_path = "/var/www/systeembeheer/app/templates/exports/template.docx"
         
         if os.path.exists(template_path):
             doc = Document(template_path)
         else:
-            # Fallback naar een leeg document indien template niet gevonden
             doc = Document()
             doc.add_heading('Periodiek Systeembeheer Rapportage', 0)
 
-        # Placeholders vervangen in paragrafen
         placeholders = {
             "{{ KLANT_NAAM }}": customer.username,
             "{{ LOCATIE }}": report.locatie or "-",
@@ -31,7 +29,6 @@ class ExportService:
                 if key in paragraph.text:
                     paragraph.text = paragraph.text.replace(key, value)
 
-        # Voeg de checklist tabel toe
         doc.add_heading('Checklist Resultaten', level=1)
         table = doc.add_table(rows=1, cols=4)
         table.style = 'Table Grid'
@@ -48,7 +45,6 @@ class ExportService:
             row_cells[2].text = item.resultaat
             row_cells[3].text = item.toelichting or ""
 
-        # Voeg de Klantpunten toe
         if report.klantpunten:
             doc.add_heading('Klantpunten (Acties)', level=1)
             kp_table = doc.add_table(rows=1, cols=2)
@@ -73,18 +69,15 @@ class ExportService:
         ws = wb.active
         ws.title = "Onderhoudsrapport"
 
-        # Headers
         ws.append(["Klant", customer.username])
         ws.append(["Datum", report.datum_uitvoering.strftime("%d-%m-%Y")])
         ws.append(["Medewerker", report.medewerker])
-        ws.append([]) # Lege regel
+        ws.append([])
 
-        # Checklist data
         ws.append(["Categorie", "Controlepunt", "Resultaat", "Toelichting"])
         for item in report.items:
             ws.append([item.categorie, item.controlepunt, item.resultaat, item.toelichting or ""])
 
-        # Klantpunten
         if report.klantpunten:
             ws.append([])
             ws.append(["KLANTPUNTEN"])

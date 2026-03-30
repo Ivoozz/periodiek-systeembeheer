@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 # Laad .env indien aanwezig
 load_dotenv()
 
-DATABASE_URL = "sqlite:///./systeembeheer.db"
+DATABASE_URL = "sqlite:////var/www/systeembeheer/systeembeheer.db"
 DATABASE_KEY = os.getenv("DATABASE_KEY")
 
 # CRUCIALE FIX VOOR PYTHON 3.13 & SQLCIPHER:
