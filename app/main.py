@@ -1,7 +1,7 @@
-from fastapi import FastAPI, Request, Depends
+from fastapi import FastAPI, Request, Depends, HTTPException, status
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, JSONResponse
 from sqlalchemy.orm import Session
 from contextlib import asynccontextmanager
 import os
@@ -50,6 +50,18 @@ async def lifespan(app: FastAPI):
     logger.info("Applicatie sluit af...")
 
 app = FastAPI(title="Periodiek Systeembeheer", lifespan=lifespan)
+
+# Exception handler voor 401 Unauthorized
+@app.exception_handler(status.HTTP_401_UNAUTHORIZED)
+async def unauthorized_exception_handler(request: Request, exc: HTTPException):
+    # Als de aanvraag van de API of static komt, stuur dan gewoon JSON of de fout terug
+    if request.url.path.startswith("/api/") or request.url.path.startswith("/static/"):
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={"detail": exc.detail},
+        )
+    # Voor alle andere (HTML) pagina's, stuur door naar login
+    return RedirectResponse(url="/login")
 
 # Static files mounten
 app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "app/static")), name="static")
