@@ -1,6 +1,13 @@
 #!/bin/bash
-# install.sh v2.1 - Productie-klare uitrol voor Debian LXC
+# install.sh v2.2 - Productie-klare uitrol voor Debian LXC met Force Refresh
 set -e
+
+# Controleer op --force vlag
+FORCE_REFRESH=false
+if [[ "$1" == "--force" ]]; then
+    FORCE_REFRESH=true
+    echo "WAARSCHUWING: Force Refresh geactiveerd. Bestaande configuratie wordt overschreven."
+fi
 
 echo "Systeembeheer Productie Installatie Start..."
 
@@ -20,13 +27,16 @@ cp -r . $APP_DIR/
 cd $APP_DIR
 
 # 4. Virtual Environment instellen
-python3 -m venv venv
+if [ ! -d "venv" ] || [ "$FORCE_REFRESH" = true ]; then
+    rm -rf venv
+    python3 -m venv venv
+fi
 source venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
 
-# 5. Secrets genereren (.env indien niet aanwezig)
-if [ ! -f .env ]; then
+# 5. Secrets genereren (.env)
+if [ ! -f .env ] || [ "$FORCE_REFRESH" = true ]; then
     echo "Secrets genereren voor .env..."
     DB_KEY=$(openssl rand -hex 32)
     JWT_SECRET=$(openssl rand -hex 32)
@@ -43,6 +53,7 @@ fi
 
 # 6. Database initialiseren (SQLCipher)
 echo "Database initialiseren..."
+# Bij force refresh, optioneel db verwijderen (gevaarlijk, dus doen we alleen handmatig of via seed script)
 python3 -m app.seed
 
 # 7. Systemd Service instellen (Gunicorn)
@@ -80,6 +91,11 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
         client_max_body_size 20M;
     }
+    
+    # Static files direct serveren
+    location /static/ {
+        alias /var/www/systeembeheer/app/static/;
+    }
 }
 EOF
 
@@ -89,10 +105,12 @@ sudo nginx -t
 sudo systemctl restart nginx
 
 # 9. Backup Cron-job
-(crontab -l 2>/dev/null; echo "0 2 * * * /bin/bash $APP_DIR/scripts/backup.sh") | crontab -
+(crontab -l 2>/dev/null | grep -v "scripts/backup.sh"; echo "0 2 * * * /bin/bash $APP_DIR/scripts/backup.sh") | crontab -
 
 echo "-------------------------------------------------------"
 echo "Installatie voltooid!"
-echo "Service API Token: $(grep SERVICE_API_TOKEN .env | cut -d'=' -f2)"
+# Forceer herladen van env om de token te tonen
+TOKEN=$(grep SERVICE_API_TOKEN .env | cut -d'=' -f2)
+echo "Service API Token: $TOKEN"
 echo "Beheerder wachtwoord: Welkom01!"
 echo "-------------------------------------------------------"
