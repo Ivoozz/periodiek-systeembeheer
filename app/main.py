@@ -10,7 +10,9 @@ import hashlib
 
 from app.db.session import engine, Base, get_db
 from app.models import SystemSettings
-from app.routers import auth, users, reports, external, settings
+from app.routers import users, reports, settings, customers, auth
+from app.api.v1 import external
+from app.web import dashboard
 
 # Dynamische padbepaling
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -75,6 +77,8 @@ app.include_router(users.router)
 app.include_router(reports.router)
 app.include_router(external.router)
 app.include_router(settings.router)
+app.include_router(customers.router)
+app.include_router(dashboard.router)
 
 @app.get("/")
 async def root(request: Request, db: Session = Depends(get_db)):

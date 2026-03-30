@@ -4,5 +4,8 @@ from app.core.auth import (
     create_access_token, 
     get_current_user, 
     require_behandelaar, 
-    require_klant
+    require_klant,
+    SECRET_KEY,
+    ALGORITHM,
+    ACCESS_TOKEN_EXPIRE_MINUTES
 )
