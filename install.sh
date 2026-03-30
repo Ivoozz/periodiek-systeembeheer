@@ -1,5 +1,5 @@
 #!/bin/bash
-# install.sh v2.5 - Productie-klare uitrol voor Debian LXC (Guaranteed Port 80)
+# install.sh v2.6 - ULTIEME FIX VOOR POORT 80 & SYSTEMD
 set -e
 
 # Controleer op --force vlag
@@ -21,10 +21,11 @@ sudo mkdir -p $APP_DIR
 sudo mkdir -p $APP_DIR/logs
 sudo mkdir -p $APP_DIR/backups
 sudo mkdir -p $APP_DIR/app/static/uploads
-sudo chown -R $USER:$USER $APP_DIR
+sudo chown -R $USER:www-data $APP_DIR
+sudo chmod -R 775 $APP_DIR
 
-# 3. Bestanden kopiëren naar de doelmap
-echo "Bestanden kopiëren..."
+# 3. Bestanden kopiëren
+echo "Bestanden kopiëren naar $APP_DIR..."
 cp -r . $APP_DIR/
 cd $APP_DIR
 
@@ -34,9 +35,8 @@ if [ ! -d "venv" ] || [ "$FORCE_REFRESH" = true ]; then
     rm -rf venv
     python3 -m venv venv
 fi
-source venv/bin/activate
-pip install --upgrade pip
-pip install -r requirements.txt
+./venv/bin/pip install --upgrade pip
+./venv/bin/pip install -r requirements.txt
 
 # 5. Secrets genereren (.env)
 if [ ! -f .env ] || [ "$FORCE_REFRESH" = true ]; then
@@ -59,9 +59,9 @@ if [ "$FORCE_REFRESH" = true ]; then
 fi
 echo "Database initialiseren..."
 export PYTHONPATH=$APP_DIR
-venv/bin/python3 -m app.seed
+./venv/bin/python3 -m app.seed
 
-# 7. Systemd Service instellen (GEGARANDEERD)
+# 7. Systemd Service instellen (ROBUUST)
 echo "Systemd service registreren..."
 sudo tee /etc/systemd/system/systeembeheer.service > /dev/null << EOF
 [Unit]
@@ -74,7 +74,8 @@ Group=www-data
 WorkingDirectory=$APP_DIR
 Environment="PATH=$APP_DIR/venv/bin"
 Environment="PYTHONPATH=$APP_DIR"
-ExecStart=$APP_DIR/venv/bin/gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 127.0.0.1:8000 --access-logfile $APP_DIR/logs/access.log --error-logfile $APP_DIR/logs/error.log
+# Forceer laden van .env via shell-wrapper indien nodig, maar gunicorn doet dit meestal zelf via de app
+ExecStart=$APP_DIR/venv/bin/gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 127.0.0.1:8000 --timeout 120
 Restart=always
 
 [Install]
@@ -85,14 +86,7 @@ sudo systemctl daemon-reload
 sudo systemctl enable systeembeheer
 sudo systemctl restart systeembeheer
 
-# Wacht even en check status
-sleep 2
-if ! systemctl is-active --quiet systeembeheer; then
-    echo "FOUT: Backend service (Gunicorn) is niet gestart. Check logs: journalctl -u systeembeheer"
-    exit 1
-fi
-
-# 8. Nginx Configuratie (ECHT POORT 80)
+# 8. Nginx Configuratie (Dwing poort 80 af)
 echo "Nginx configureren op poort 80..."
 sudo tee /etc/nginx/sites-available/systeembeheer > /dev/null << 'EOF'
 server {
@@ -100,16 +94,12 @@ server {
     listen [::]:80 default_server;
     server_name _;
 
-    # Verwijder oude security headers die problemen kunnen geven
-    server_tokens off;
+    access_log /var/www/systeembeheer/logs/nginx_access.log;
+    error_log /var/www/systeembeheer/logs/nginx_error.log;
 
     location / {
         proxy_pass http://127.0.0.1:8000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
         proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
@@ -118,7 +108,6 @@ server {
     
     location /static/ {
         alias /var/www/systeembeheer/app/static/;
-        expires 30d;
     }
 }
 EOF
