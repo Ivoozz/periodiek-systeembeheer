@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from contextlib import asynccontextmanager
 import os
 import logging
+import hashlib
 
 from app.db.session import engine, Base, get_db
 from app.models import SystemSettings
@@ -27,34 +28,43 @@ def get_system_settings(db: Session):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup logica
     logger.info("Applicatie start op...")
-    
-    # Mappen aanmaken
     try:
         os.makedirs("/var/www/systeembeheer/app/static/uploads", exist_ok=True)
-        logger.info("Upload mappen gecontroleerd.")
     except Exception as e:
         logger.error(f"Fout bij aanmaken mappen: {e}")
 
-    # Database initialisatie (verplaatst van module-niveau naar hier)
     try:
         Base.metadata.create_all(bind=engine)
-        logger.info("Database tabellen gecontroleerd/aangemaakt.")
+        logger.info("Database tabellen gecontroleerd.")
     except Exception as e:
         logger.error(f"CRITIEKE FOUT bij database initialisatie: {e}")
-        # We laten de app wel doorstarten zodat de gateway niet doodslaat, 
-        # maar API calls zullen falen met duidelijke logs.
     
     yield
-    # Shutdown logica indien nodig
     logger.info("Applicatie sluit af...")
 
 app = FastAPI(title="Periodiek Systeembeheer", lifespan=lifespan)
 
-# Static files & Templates
+# Static files mounten
 app.mount("/static", StaticFiles(directory="/var/www/systeembeheer/app/static"), name="static")
 templates = Jinja2Templates(directory="/var/www/systeembeheer/app/templates")
+
+# CACHEBUSTER LOGICA
+def get_static_hash(path: str):
+    """Berekent een MD5 hash van een statisch bestand voor cache-busting."""
+    full_path = os.path.join("/var/www/systeembeheer/app/static", path.lstrip("/"))
+    if os.path.exists(full_path):
+        with open(full_path, "rb") as f:
+            return hashlib.md5(f.read()).hexdigest()[:8]
+    return "1"
+
+def hashed_static_url(path: str):
+    """Genereert een URL met een v= query parameter gebaseerd op de bestandsinhoud."""
+    v = get_static_hash(path)
+    return f"/static/{path.lstrip('/')}?v={v}"
+
+# Voeg de helper toe aan Jinja2 templates
+templates.env.globals["static_url"] = hashed_static_url
 
 # Routers
 app.include_router(auth.router)
@@ -78,7 +88,6 @@ async def login_page(request: Request, db: Session = Depends(get_db)):
 @app.get("/dashboard")
 async def dashboard_page(request: Request, db: Session = Depends(get_db)):
     settings = get_system_settings(db)
-    # De specifieke dashboard logica (admin/klant) wordt in de frontend/router afgehandeld
     return templates.TemplateResponse("admin/dashboard.html", {"request": request, "settings": settings})
 
 @app.get("/admin/instellingen")
