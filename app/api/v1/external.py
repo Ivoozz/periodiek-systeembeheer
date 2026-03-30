@@ -1,75 +1,74 @@
-from fastapi import APIRouter, Depends, HTTPException, Header, status
+from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlalchemy.orm import Session
+import os
 from app.db.session import get_db
-from app.models import Report, ReportItem, Checkpoint, Category, User, CustomerCheck
-from app.core.config import settings
+from app.models import Report, ReportItem, User, Checkpoint, Category
 from pydantic import BaseModel
-from typing import Dict
+from typing import Dict, Any, Optional
 from datetime import date
 
-router = APIRouter(prefix="/api/v1/external", tags=["External"])
+router = APIRouter(prefix="/api/v1/external", tags=["External API"])
 
-class ExternalReportRequest(BaseModel):
+class ExternalReportIn(BaseModel):
     customer_id: int
-    medewerker: str
-    data: Dict[str, str]
-
-def verify_service_token(x_service_token: str = Header(...)):
-    if x_service_token != settings.SERVICE_API_TOKEN:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid service token",
-        )
-    return x_service_token
+    medewerker: str = "PowerShell Script"
+    data: Dict[str, Any]
 
 @router.post("/report")
-def create_external_report(
-    request: ExternalReportRequest,
-    db: Session = Depends(get_db),
-    token: str = Depends(verify_service_token)
+async def create_external_report(
+    report_in: ExternalReportIn,
+    x_service_token: Optional[str] = Header(None),
+    db: Session = Depends(get_db)
 ):
-    # Check if customer exists
-    customer = db.query(User).filter(User.id == request.customer_id).first()
-    if not customer:
-        raise HTTPException(status_code=404, detail="Customer not found")
+    # Authenticatie via de .env token
+    expected_token = os.getenv("SERVICE_API_TOKEN")
+    if not expected_token or x_service_token != expected_token:
+        raise HTTPException(status_code=401, detail="Ongeldige of ontbrekende Service API Token")
 
-    # Create new report
+    # Check of de klant bestaat
+    customer = db.query(User).filter(User.id == report_in.customer_id).first()
+    if not customer:
+        raise HTTPException(status_code=404, detail="Klant niet gevonden")
+
+    # Nieuw rapport aanmaken
     new_report = Report(
-        customer_id=request.customer_id,
-        medewerker=request.medewerker,
+        customer_id=customer.id,
+        medewerker=report_in.medewerker,
         datum_uitvoering=date.today(),
-        locatie="Remote PowerShell"
+        locatie=customer.locatie
     )
     db.add(new_report)
-    db.flush() # Get the id
+    db.flush()
 
-    for checkpoint_name, result in request.data.items():
-        # Try to find the checkpoint to get the category
-        checkpoint = db.query(Checkpoint).filter(Checkpoint.name == checkpoint_name).first()
-        
-        category_name = "External"
+    # Match data met checkpoints
+    for key, value in report_in.data.items():
+        # Zoek of er een controlepunt is met deze naam (ongeacht categorie)
+        checkpoint = db.query(Checkpoint).filter(Checkpoint.name == key).first()
+        categorie_naam = "Algemeen"
         if checkpoint:
+            # Haal de categorie op via het checkpoint
             category = db.query(Category).filter(Category.id == checkpoint.category_id).first()
             if category:
-                category_name = category.name
-        else:
-            # Check customer specific checks
-            customer_check = db.query(CustomerCheck).filter(
-                CustomerCheck.customer_id == request.customer_id,
-                CustomerCheck.name == checkpoint_name
-            ).first()
-            if customer_check:
-                category_name = "Klantspecifieke controles"
+                categorie_naam = category.name
         
-        report_item = ReportItem(
+        # Voeg item toe aan rapport
+        # We gaan ervan uit dat als het script data stuurt, het resultaat 'OK' is tenzij anders vermeld
+        result = "OK"
+        toelichting = str(value)
+        if str(value).upper() in ["NOK", "FOUT", "ERROR"]:
+            result = "NOK"
+        elif str(value).upper() in ["NVT", "NA"]:
+            result = "NVT"
+
+        item = ReportItem(
             report_id=new_report.id,
-            categorie=category_name,
-            controlepunt=checkpoint_name,
+            categorie=categorie_naam,
+            controlepunt=key,
             resultaat=result,
-            toelichting="Automatically reported by external service"
+            toelichting=toelichting
         )
-        db.add(report_item)
-    
+        db.add(item)
+
     db.commit()
     db.refresh(new_report)
-    return {"status": "success", "report_id": new_report.id}
+    return {"message": "Rapport succesvol aangemaakt via API", "report_id": new_report.id}
