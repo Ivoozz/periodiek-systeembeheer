@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <h1 class="text-3xl font-bold mb-6">Klant Dashboard</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div class="bg-white p-6 rounded shadow-md border-t-4 border-blue-600">
+            <h2 class="text-xl font-semibold mb-2 text-gray-700">Volgende Onderhoud</h2>
+            <p class="text-3xl font-bold text-blue-800">
+                {% if user.next_maintenance_date %}
+                    {{ user.next_maintenance_date.strftime('%d-%m-%Y') }}
+                {% else %}
+                    Nog niet gepland
+                {% endif %}
+            </p>
+            <p class="text-sm text-gray-500 mt-2">Locatie: {{ user.locatie or 'Onbekend' }}</p>
+        </div>
+        
+        <div class="bg-white p-6 rounded shadow-md border-t-4 border-green-600">
+            <h2 class="text-xl font-semibold mb-2 text-gray-700">Account Status</h2>
+            <p class="text-lg">Ingelogd als: <span class="font-bold">{{ user.username }}</span></p>
+            <p class="text-sm text-gray-500 mt-2">Klantportaal is actief</p>
+        </div>
+    </div>
+
+    <div class="bg-white p-6 rounded shadow-md">
+        <h2 class="text-2xl font-bold mb-6 border-b pb-2">Rapportage Historie</h2>
+        <div id="history-container">
+            <p class="text-gray-500 italic">Historie laden...</p>
+        </div>
+    </div>
+</div>
+
+<template id="history-item-template">
+    <div class="flex items-center justify-between p-4 border-b hover:bg-gray-50 transition-colors">
+        <div>
+            <div class="font-bold text-lg report-date"></div>
+            <div class="text-sm text-gray-600 report-meta"></div>
+        </div>
+        <a href="" class="view-link bg-blue-100 text-blue-700 px-4 py-2 rounded font-semibold hover:bg-blue-200">
+            Bekijk Rapport
+        </a>
+    </div>
+</template>
+
+<script>
+    const customerId = {{ user.id }};
+    const historyContainer = document.getElementById('history-container');
+
+    async function loadHistory() {
+        try {
+            const response = await fetch(`/api/reports/history/${customerId}`);
+            if (!response.ok) throw new Error('Kon historie niet laden');
+            const reports = await response.json();
+            
+            if (reports.length === 0) {
+                historyContainer.innerHTML = '<p class="text-gray-500 py-4">Er zijn nog geen rapportages beschikbaar.</p>';
+                return;
+            }
+            
+            historyContainer.innerHTML = '';
+            reports.forEach(report => {
+                const template = document.getElementById('history-item-template').content.cloneNode(true);
+                
+                const date = new Date(report.datum_uitvoering).toLocaleDateString('nl-NL', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                });
+                
+                template.querySelector('.report-date').textContent = date;
+                template.querySelector('.report-meta').textContent = `Medewerker: ${report.medewerker} | Locatie: ${report.locatie}`;
+                template.querySelector('.view-link').href = `/klant/rapport/${report.id}`;
+                
+                historyContainer.appendChild(template);
+            });
+            
+        } catch (error) {
+            historyContainer.innerHTML = `<p class="text-red-500">Fout: ${error.message}</p>`;
+        }
+    }
+
+    loadHistory();
+</script>
+{% endblock %}

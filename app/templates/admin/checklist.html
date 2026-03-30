@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold">Onderhoudsuitvoering</h1>
+        <a href="/admin" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Terug</a>
+    </div>
+
+    <form id="checklistForm" class="space-y-8 bg-white p-8 rounded shadow-md">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 border-b pb-6">
+            <div>
+                <label class="block text-sm font-medium mb-1">Datum Uitvoering</label>
+                <input type="date" id="datum_uitvoering" name="datum_uitvoering" class="w-full border p-2 rounded" required value="{{ today }}">
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-1">Medewerker</label>
+                <input type="text" id="medewerker" name="medewerker" class="w-full border p-2 rounded" required value="{{ user.username }}">
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-1">Locatie</label>
+                <input type="text" id="locatie" name="locatie" class="w-full border p-2 rounded" required value="Op afstand">
+            </div>
+        </div>
+
+        <div id="checklist-container" class="space-y-8">
+            <!-- Dynamically loaded categories will appear here -->
+            <p class="text-gray-500 italic">Controles laden...</p>
+        </div>
+
+        <div class="border-t pt-6">
+            <h2 class="text-xl font-semibold mb-4">Klantpunten</h2>
+            <div id="klantpunten-container" class="space-y-4">
+                <!-- Dynamic klantpunten rows -->
+            </div>
+            <button type="button" onclick="addKlantpunt()" class="mt-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                + Klantpunt toevoegen
+            </button>
+        </div>
+
+        <div class="pt-6 border-t flex justify-end">
+            <button type="submit" class="bg-blue-600 text-white px-8 py-3 rounded-lg font-bold hover:bg-blue-700 shadow-lg">
+                Rapportage Opslaan
+            </button>
+        </div>
+    </form>
+</div>
+
+<template id="category-template">
+    <div class="category-section">
+        <h2 class="text-xl font-bold bg-blue-100 p-3 rounded mb-4 text-blue-800"></h2>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="border-b">
+                        <th class="py-2 w-1/2">Controlepunt</th>
+                        <th class="py-2 w-1/4">Resultaat</th>
+                        <th class="py-2 w-1/4">Toelichting</th>
+                    </tr>
+                </thead>
+                <tbody class="checkpoint-body">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</template>
+
+<template id="checkpoint-row-template">
+    <tr class="border-b hover:bg-gray-50">
+        <td class="py-3 font-medium checkpoint-name"></td>
+        <td class="py-3">
+            <select class="w-full border p-2 rounded result-select" required>
+                <option value="OK">OK</option>
+                <option value="NOK">NOK</option>
+                <option value="NVT">NVT</option>
+            </select>
+        </td>
+        <td class="py-3">
+            <input type="text" placeholder="Optioneel" class="w-full border p-2 rounded toelichting-input">
+        </td>
+    </tr>
+</template>
+
+<template id="klantpunt-row-template">
+    <div class="klantpunt-row grid grid-cols-1 md:grid-cols-12 gap-4 items-end bg-gray-50 p-4 rounded border">
+        <div class="md:col-span-5">
+            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Beschrijving</label>
+            <input type="text" class="w-full border p-2 rounded beschrijving-input" placeholder="Wat is er geconstateerd?" required>
+        </div>
+        <div class="md:col-span-6">
+            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Uitgevoerde Actie</label>
+            <input type="text" class="w-full border p-2 rounded actie-input" placeholder="Wat is er gedaan?" required>
+        </div>
+        <div class="md:col-span-1">
+            <button type="button" onclick="this.closest('.klantpunt-row').remove()" class="text-red-600 hover:text-red-800 p-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+            </button>
+        </div>
+    </div>
+</template>
+
+<script>
+    const customerId = {{ customer_id }};
+    const checklistContainer = document.getElementById('checklist-container');
+    const klantpuntenContainer = document.getElementById('klantpunten-container');
+    const form = document.getElementById('checklistForm');
+
+    // Load template data
+    async function loadTemplate() {
+        try {
+            const response = await fetch(`/api/reports/template/${customerId}`);
+            if (!response.ok) throw new Error('Template niet gevonden');
+            const data = await response.json();
+            
+            checklistContainer.innerHTML = '';
+            
+            data.forEach(category => {
+                const catTemplate = document.getElementById('category-template').content.cloneNode(true);
+                catTemplate.querySelector('h2').textContent = category.name;
+                
+                const checkpointBody = catTemplate.querySelector('.checkpoint-body');
+                
+                category.checkpoints.forEach(checkpoint => {
+                    const cpTemplate = document.getElementById('checkpoint-row-template').content.cloneNode(true);
+                    cpTemplate.querySelector('.checkpoint-name').textContent = checkpoint.name;
+                    cpTemplate.querySelector('tr').dataset.category = category.name;
+                    cpTemplate.querySelector('tr').dataset.checkpoint = checkpoint.name;
+                    checkpointBody.appendChild(cpTemplate);
+                });
+                
+                checklistContainer.appendChild(catTemplate);
+            });
+            
+            // Add initial empty klantpunt row
+            addKlantpunt();
+            
+        } catch (error) {
+            checklistContainer.innerHTML = `<p class="text-red-500">Fout bij laden: ${error.message}</p>`;
+        }
+    }
+
+    function addKlantpunt() {
+        const kpTemplate = document.getElementById('klantpunt-row-template').content.cloneNode(true);
+        klantpuntenContainer.appendChild(kpTemplate);
+    }
+
+    form.onsubmit = async (e) => {
+        e.preventDefault();
+        
+        const items = [];
+        document.querySelectorAll('#checklist-container tr[data-category]').forEach(row => {
+            items.push({
+                categorie: row.dataset.category,
+                controlepunt: row.dataset.checkpoint,
+                resultaat: row.querySelector('.result-select').value,
+                toelichting: row.querySelector('.toelichting-input').value || null
+            });
+        });
+        
+        const klantpunten = [];
+        document.querySelectorAll('.klantpunt-row').forEach(row => {
+            const beschrijving = row.querySelector('.beschrijving-input').value;
+            const actie = row.querySelector('.actie-input').value;
+            if (beschrijving && actie) {
+                klantpunten.push({
+                    beschrijving: beschrijving,
+                    uitgevoerde_actie: actie
+                });
+            }
+        });
+        
+        const payload = {
+            customer_id: customerId,
+            medewerker: document.getElementById('medewerker').value,
+            datum_uitvoering: document.getElementById('datum_uitvoering').value,
+            locatie: document.getElementById('locatie').value,
+            items: items,
+            klantpunten: klantpunten
+        };
+        
+        try {
+            const response = await fetch('/api/reports', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || 'Fout bij opslaan');
+            }
+            
+            alert('Rapportage succesvol opgeslagen!');
+            window.location.href = '/admin';
+        } catch (error) {
+            alert('Fout: ' + error.message);
+        }
+    };
+
+    // Set today's date if not already set
+    if (!document.getElementById('datum_uitvoering').value) {
+        document.getElementById('datum_uitvoering').value = new Date().toISOString().split('T')[0];
+    }
+
+    loadTemplate();
+</script>
+{% endblock %}

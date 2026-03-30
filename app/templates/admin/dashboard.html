@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="flex">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-white shadow-md rounded p-4 h-full min-h-[500px]">
+        <h3 class="font-bold text-gray-700 mb-4 px-2">Beheer</h3>
+        <ul class="space-y-2">
+            <li><a href="/admin" class="block p-2 bg-blue-100 text-blue-700 rounded font-medium">Overzicht</a></li>
+            <li><a href="#" class="block p-2 text-gray-600 hover:bg-gray-100 rounded">Instellingen</a></li>
+        </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="flex-1 ml-6">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-800">Klanten Overzicht</h2>
+            <div class="space-x-2">
+                <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700" onclick="showAddCustomer()">Klant Toevoegen</button>
+            </div>
+        </div>
+
+        <div class="bg-white shadow-md rounded overflow-hidden">
+            <table class="w-full text-left">
+                <thead class="bg-gray-50 border-b">
+                    <tr>
+                        <th class="p-4 font-semibold text-gray-600">ID</th>
+                        <th class="p-4 font-semibold text-gray-600">Gebruikersnaam</th>
+                        <th class="p-4 font-semibold text-gray-600">Acties</th>
+                    </tr>
+                </thead>
+                <tbody id="customer-list">
+                    <!-- Loaded via JS -->
+                    <tr><td colspan="3" class="p-4 text-center text-gray-500 italic">Bezig met laden...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function fetchCustomers() {
+        try {
+            const res = await fetch('/api/customers/');
+            if (!res.ok) throw new Error("Failed to fetch customers");
+            const customers = await res.json();
+            const list = document.getElementById('customer-list');
+            list.innerHTML = '';
+            
+            if (customers.length === 0) {
+                list.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-gray-500">Geen klanten gevonden.</td></tr>';
+                return;
+            }
+
+            customers.forEach(c => {
+                const row = document.createElement('tr');
+                row.className = 'border-b hover:bg-gray-50';
+                row.innerHTML = `
+                    <td class="p-4">${c.id}</td>
+                    <td class="p-4">${c.username}</td>
+                    <td class="p-4 space-x-2">
+                        <a href="/admin/checklist/${c.id}" class="text-blue-600 hover:underline font-medium">Nieuwe Controle</a>
+                        <span class="text-gray-300">|</span>
+                        <a href="#" class="text-gray-600 hover:underline">Rapportages</a>
+                    </td>
+                `;
+                list.appendChild(row);
+            });
+        } catch (err) {
+            console.error(err);
+            document.getElementById('customer-list').innerHTML = `<tr><td colspan="3" class="p-4 text-center text-red-500">Fout: ${err.message}</td></tr>`;
+        }
+    }
+
+    function showAddCustomer() {
+        alert("Klant toevoegen is nog niet geïmplementeerd in dit prototype.");
+    }
+
+    fetchCustomers();
+</script>
+{% endblock %}
