@@ -1,10 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from typing import List
 from app.database import get_db
 from app.models import User, Template, Category, Checkpoint, CustomerCheck, Report, ReportItem, ReportKlantpunt
 from app.schemas import ReportCreate, ReportResponse, ReportHistoryItem, TemplateCategory, TemplateCheckpoint
 from app.auth import get_current_user, require_behandelaar
+from app.services.export_service import ExportService
 
 router = APIRouter(prefix="/api/reports", tags=["Reports"])
 
@@ -90,3 +92,43 @@ def get_report_details(report_id: int, db: Session = Depends(get_db), current_us
         raise HTTPException(status_code=403, detail="Toegang geweigerd")
         
     return report
+
+@router.get("/{id}/export/word")
+def export_report_word(id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    report = db.query(Report).filter(Report.id == id).first()
+    if not report:
+        raise HTTPException(status_code=404, detail="Rapport niet gevonden")
+    
+    # RBAC: Only Behandelaar or the Klant whose report it is
+    if current_user.role != "Behandelaar" and current_user.id != report.customer_id:
+        raise HTTPException(status_code=403, detail="Toegang geweigerd")
+    
+    customer = db.query(User).filter(User.id == report.customer_id).first()
+    buffer = ExportService.generate_word_report(report, customer)
+    
+    filename = f"Rapport_{report.datum_uitvoering.strftime('%Y%m%d')}_{customer.username}.docx"
+    return StreamingResponse(
+        buffer,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
+@router.get("/{id}/export/excel")
+def export_report_excel(id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    report = db.query(Report).filter(Report.id == id).first()
+    if not report:
+        raise HTTPException(status_code=404, detail="Rapport niet gevonden")
+    
+    # RBAC: Only Behandelaar or the Klant whose report it is
+    if current_user.role != "Behandelaar" and current_user.id != report.customer_id:
+        raise HTTPException(status_code=403, detail="Toegang geweigerd")
+    
+    customer = db.query(User).filter(User.id == report.customer_id).first()
+    buffer = ExportService.generate_excel_report(report, customer)
+    
+    filename = f"Rapport_{report.datum_uitvoering.strftime('%Y%m%d')}_{customer.username}.xlsx"
+    return StreamingResponse(
+        buffer,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )

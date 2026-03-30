@@ -1,17 +1,39 @@
 from sqlalchemy import create_engine, event
-from sqlalchemy.orm import sessionmaker
-from app.core.config import settings
+from sqlalchemy.orm import sessionmaker, declarative_base
+import os
+import sys
+from dotenv import load_dotenv
 
-SQLALCHEMY_DATABASE_URL = "sqlite:///./systeembeheer.db"
+# Laad .env indien aanwezig
+load_dotenv()
 
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
-)
+DATABASE_URL = "sqlite:///./systeembeheer.db"
+DATABASE_KEY = os.getenv("DATABASE_KEY")
+
+# CRUCIALE FIX VOOR PYTHON 3.13 & SQLCIPHER:
+# We gebruiken pysqlite3-binary als vervanger voor de standaard sqlite3
+# omdat deze vaak gecompileerd is met ondersteuning voor extensies/sqlcipher.
+try:
+    from pysqlite3 import dbapi2 as sqlite
+except ImportError:
+    import sqlite3 as sqlite
+
+engine = create_engine(DATABASE_URL, module=sqlite)
 
 @event.listens_for(engine, "connect")
 def set_sqlite_pragma(dbapi_connection, connection_record):
     cursor = dbapi_connection.cursor()
-    cursor.execute(f"PRAGMA key = '{settings.DATABASE_KEY}'")
+    if DATABASE_KEY:
+        # SQLCipher PRAGMA key instellen
+        cursor.execute(f"PRAGMA key = '{DATABASE_KEY}'")
     cursor.close()
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()

@@ -4,6 +4,7 @@ class Settings(BaseSettings):
     DATABASE_KEY: str
     JWT_SECRET: str
     ADMIN_PASSWORD: str
+    SERVICE_API_TOKEN: str
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
     

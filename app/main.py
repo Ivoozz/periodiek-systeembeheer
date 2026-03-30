@@ -6,6 +6,7 @@ from app.database import engine, Base, get_db
 from app import models, auth, schemas
 from app.routers import customers, reports
 from app.web import dashboard
+from app.api.v1 import external
 
 # Ensure tables exist
 Base.metadata.create_all(bind=engine)
@@ -16,6 +17,7 @@ templates = Jinja2Templates(directory="app/templates")
 app.include_router(customers.router)
 app.include_router(reports.router)
 app.include_router(dashboard.router)
+app.include_router(external.router)
 
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request, user: models.User = Depends(auth.get_current_user)):
@@ -23,9 +25,16 @@ def index(request: Request, user: models.User = Depends(auth.get_current_user)):
         return RedirectResponse(url="/login", status_code=302)
     if user.role == "Behandelaar":
         return RedirectResponse(url="/admin", status_code=302)
+    elif user.role == "Klant":
+        return RedirectResponse(url="/klant", status_code=302)
     else:
-        # Default fallback, in the future this could be /klant
         return RedirectResponse(url="/login", status_code=302)
+
+@app.get("/klant", response_class=HTMLResponse)
+def klant_dashboard(request: Request, user: models.User = Depends(auth.get_current_user)):
+    if not user or user.role != "Klant":
+        return RedirectResponse(url="/login", status_code=302)
+    return templates.TemplateResponse("klant/dashboard.html", {"request": request, "user": user})
 
 @app.get("/login", response_class=HTMLResponse)
 def login_get(request: Request, user: models.User = Depends(auth.get_current_user)):

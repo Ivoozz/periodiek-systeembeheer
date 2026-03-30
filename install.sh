@@ -1,68 +1,62 @@
 #!/bin/bash
-# install.sh - Productie-klare deployment script voor Debian LXC
+# install.sh v2.1 - Productie-klare uitrol voor Debian LXC
 set -e
 
-echo "Systeembeheer Productie-Installatie Start..."
+echo "Systeembeheer Productie Installatie Start..."
 
-# Bepaal de huidige gebruiker
-CURRENT_USER=$(whoami)
-APP_DIR="/var/www/systeembeheer"
-
-# 1. Installeer systeem pakketten inclusief SQLCipher
-echo "Installeren van systeem pakketten..."
+# 1. Systeem pakketten installeren
 sudo apt-get update
-sudo apt-get install -y python3 python3-pip python3-venv nginx sqlcipher libsqlcipher-dev build-essential openssl
+sudo apt-get install -y python3 python3-pip python3-venv nginx sqlite3 sqlcipher libsqlcipher-dev openssl
 
 # 2. App directory setup
-echo "Inrichten van directory: $APP_DIR"
+APP_DIR="/var/www/systeembeheer"
 sudo mkdir -p $APP_DIR
-sudo chown -R $CURRENT_USER:$CURRENT_USER $APP_DIR
+sudo mkdir -p $APP_DIR/logs
+sudo mkdir -p $APP_DIR/backups
+sudo chown -R $USER:$USER $APP_DIR
 
-# 3. Kopieer bronbestanden
-echo "Kopiëren van bestanden..."
+# 3. Bestanden kopiëren
 cp -r . $APP_DIR/
 cd $APP_DIR
 
-# 4. Automate .env configuratie (DATABASE_KEY & JWT_SECRET)
-if [ ! -f ".env" ]; then
-    echo "Genereren van nieuwe .env configuratie..."
-    DATABASE_KEY=$(openssl rand -hex 32)
-    JWT_SECRET=$(openssl rand -hex 32)
-    cat <<EOF > .env
-DATABASE_KEY=$DATABASE_KEY
-JWT_SECRET=$JWT_SECRET
-ADMIN_PASSWORD=Welkom01!
-APP_ENV=production
-EOF
-else
-    echo ".env bestand bestaat al, overslaan van generatie."
-fi
-
-# 5. Virtual Environment setup & installatie
-echo "Setup van Python Virtual Environment..."
+# 4. Virtual Environment instellen
 python3 -m venv venv
 source venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
 
-# 6. Initialiseer Database & Seed Data
-echo "Initialiseren van de database..."
+# 5. Secrets genereren (.env indien niet aanwezig)
+if [ ! -f .env ]; then
+    echo "Secrets genereren voor .env..."
+    DB_KEY=$(openssl rand -hex 32)
+    JWT_SECRET=$(openssl rand -hex 32)
+    SERVICE_TOKEN=$(openssl rand -hex 24)
+    cat << EOF > .env
+DATABASE_KEY=$DB_KEY
+JWT_SECRET=$JWT_SECRET
+SERVICE_API_TOKEN=$SERVICE_TOKEN
+ADMIN_PASSWORD=Welkom01!
+APP_ENV=production
+EOF
+    echo "Nieuwe .env aangemaakt met unieke sleutels."
+fi
+
+# 6. Database initialiseren (SQLCipher)
+echo "Database initialiseren..."
 python3 -m app.seed
 
-# 7. Systemd Service Configuratie (Gunicorn)
-echo "Configureren van Systemd service..."
+# 7. Systemd Service instellen (Gunicorn)
 cat << EOF | sudo tee /etc/systemd/system/systeembeheer.service
 [Unit]
 Description=Gunicorn Systeembeheer Service
 After=network.target
 
 [Service]
-User=$CURRENT_USER
+User=$USER
 Group=www-data
 WorkingDirectory=$APP_DIR
-EnvironmentFile=$APP_DIR/.env
 Environment="PATH=$APP_DIR/venv/bin"
-ExecStart=$APP_DIR/venv/bin/gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.main:app --bind 127.0.0.1:8000
+ExecStart=$APP_DIR/venv/bin/gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 127.0.0.1:8000
 
 [Install]
 WantedBy=multi-user.target
@@ -70,10 +64,9 @@ EOF
 
 sudo systemctl daemon-reload
 sudo systemctl enable systeembeheer
-sudo systemctl start systeembeheer || (journalctl -u systeembeheer --no-pager | tail -n 20 && exit 1)
+sudo systemctl restart systeembeheer
 
-# 8. Nginx Configuratie (Reverse Proxy)
-echo "Configureren van Nginx..."
+# 8. Nginx Configuratie
 cat << 'EOF' | sudo tee /etc/nginx/sites-available/systeembeheer
 server {
     listen 80;
@@ -85,6 +78,7 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+        client_max_body_size 20M;
     }
 }
 EOF
@@ -94,12 +88,11 @@ sudo rm -f /etc/nginx/sites-enabled/default
 sudo nginx -t
 sudo systemctl restart nginx
 
-# 9. Setup Cron-job voor backup.sh
-echo "Instellen van de nachtelijke backup..."
-chmod +x scripts/backup.sh
-mkdir -p logs
-# Voorkom dubbele cronjobs
-(crontab -l 2>/dev/null | grep -v "scripts/backup.sh"; echo "0 2 * * * /bin/bash $APP_DIR/scripts/backup.sh >> $APP_DIR/logs/backup.log 2>&1") | crontab -
+# 9. Backup Cron-job
+(crontab -l 2>/dev/null; echo "0 2 * * * /bin/bash $APP_DIR/scripts/backup.sh") | crontab -
 
-echo "Productie-installatie voltooid. Applicatie draait op poort 80."
-echo "Backup is ingesteld voor elke nacht om 02:00 uur (Logs: $APP_DIR/logs/backup.log)."
+echo "-------------------------------------------------------"
+echo "Installatie voltooid!"
+echo "Service API Token: $(grep SERVICE_API_TOKEN .env | cut -d'=' -f2)"
+echo "Beheerder wachtwoord: Welkom01!"
+echo "-------------------------------------------------------"
