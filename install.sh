@@ -1,12 +1,12 @@
 #!/bin/bash
-# install.sh v2.3 - Productie-klare uitrol voor Debian LXC met PYTHONPATH fixes
+# install.sh v2.4 - Productie-klare uitrol voor Debian LXC (Clean DB & Env)
 set -e
 
 # Controleer op --force vlag
 FORCE_REFRESH=false
 if [[ "$1" == "--force" ]]; then
     FORCE_REFRESH=true
-    echo "WAARSCHUWING: Force Refresh geactiveerd. Bestaande configuratie wordt overschreven."
+    echo "WAARSCHUWING: Force Refresh geactiveerd. Bestaande configuratie en database worden gewist!"
 fi
 
 echo "Systeembeheer Productie Installatie Start..."
@@ -41,6 +41,7 @@ if [ ! -f .env ] || [ "$FORCE_REFRESH" = true ]; then
     DB_KEY=$(openssl rand -hex 32)
     JWT_SECRET=$(openssl rand -hex 32)
     SERVICE_TOKEN=$(openssl rand -hex 24)
+    # Altijd een nieuwe .env bij --force
     cat << EOF > .env
 DATABASE_KEY=$DB_KEY
 JWT_SECRET=$JWT_SECRET
@@ -51,13 +52,17 @@ EOF
     echo "Nieuwe .env aangemaakt met unieke sleutels."
 fi
 
-# 6. Database initialiseren (SQLCipher) met correcte PYTHONPATH
+# 6. Database herinitialiseren bij force
+if [ "$FORCE_REFRESH" = true ]; then
+    echo "Oude database verwijderen voor schone schema-opzet..."
+    rm -f systeembeheer.db
+fi
+
 echo "Database initialiseren..."
-# PYTHONPATH op de huidige directory zetten zodat 'app' als module herkend wordt
 export PYTHONPATH=$APP_DIR
 python3 -m app.seed
 
-# 7. Systemd Service instellen (Gunicorn)
+# 7. Systemd Service instellen
 cat << EOF | sudo tee /etc/systemd/system/systeembeheer.service
 [Unit]
 Description=Gunicorn Systeembeheer Service
@@ -79,7 +84,7 @@ sudo systemctl daemon-reload
 sudo systemctl enable systeembeheer
 sudo systemctl restart systeembeheer
 
-# 8. Nginx Configuratie (Dwingen op poort 80)
+# 8. Nginx Configuratie
 cat << 'EOF' | sudo tee /etc/nginx/sites-available/systeembeheer
 server {
     listen 80 default_server;
@@ -95,7 +100,6 @@ server {
         client_max_body_size 50M;
     }
     
-    # Static files direct serveren
     location /static/ {
         alias /var/www/systeembeheer/app/static/;
         expires 30d;
@@ -114,8 +118,9 @@ sudo systemctl restart nginx
 
 echo "-------------------------------------------------------"
 echo "Installatie voltooid!"
-TOKEN=$(grep SERVICE_API_TOKEN .env | cut -d'=' -f2)
-echo "Service API Token: $TOKEN"
+# We halen de token DIRECT uit het bestand om zeker te zijn
+TOKEN=$(grep "SERVICE_API_TOKEN=" .env | cut -d'=' -f2)
+echo "SERVICE API TOKEN: $TOKEN"
 echo "Beheerder wachtwoord: Welkom01!"
-echo "Site bereikbaar op poort 80"
+echo "Site bereikbaar op: http://$(hostname -I | awk '{print $1}')"
 echo "-------------------------------------------------------"
