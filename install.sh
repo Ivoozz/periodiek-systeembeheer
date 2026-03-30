@@ -1,5 +1,5 @@
 #!/bin/bash
-# install.sh v2.2 - Productie-klare uitrol voor Debian LXC met Force Refresh
+# install.sh v2.3 - Productie-klare uitrol voor Debian LXC met PYTHONPATH fixes
 set -e
 
 # Controleer op --force vlag
@@ -51,9 +51,10 @@ EOF
     echo "Nieuwe .env aangemaakt met unieke sleutels."
 fi
 
-# 6. Database initialiseren (SQLCipher)
+# 6. Database initialiseren (SQLCipher) met correcte PYTHONPATH
 echo "Database initialiseren..."
-# Bij force refresh, optioneel db verwijderen (gevaarlijk, dus doen we alleen handmatig of via seed script)
+# PYTHONPATH op de huidige directory zetten zodat 'app' als module herkend wordt
+export PYTHONPATH=$APP_DIR
 python3 -m app.seed
 
 # 7. Systemd Service instellen (Gunicorn)
@@ -67,6 +68,7 @@ User=$USER
 Group=www-data
 WorkingDirectory=$APP_DIR
 Environment="PATH=$APP_DIR/venv/bin"
+Environment="PYTHONPATH=$APP_DIR"
 ExecStart=$APP_DIR/venv/bin/gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 127.0.0.1:8000
 
 [Install]
@@ -77,10 +79,11 @@ sudo systemctl daemon-reload
 sudo systemctl enable systeembeheer
 sudo systemctl restart systeembeheer
 
-# 8. Nginx Configuratie
+# 8. Nginx Configuratie (Dwingen op poort 80)
 cat << 'EOF' | sudo tee /etc/nginx/sites-available/systeembeheer
 server {
-    listen 80;
+    listen 80 default_server;
+    listen [::]:80 default_server;
     server_name _;
 
     location / {
@@ -89,18 +92,20 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-        client_max_body_size 20M;
+        client_max_body_size 50M;
     }
     
     # Static files direct serveren
     location /static/ {
         alias /var/www/systeembeheer/app/static/;
+        expires 30d;
+        add_header Cache-Control "public, no-transform";
     }
 }
 EOF
 
 sudo ln -sf /etc/nginx/sites-available/systeembeheer /etc/nginx/sites-enabled/
-sudo rm -f /etc/nginx/sites-enabled/default
+sudo rm -f /etc/nginx/sites-enabled/default || true
 sudo nginx -t
 sudo systemctl restart nginx
 
@@ -109,8 +114,8 @@ sudo systemctl restart nginx
 
 echo "-------------------------------------------------------"
 echo "Installatie voltooid!"
-# Forceer herladen van env om de token te tonen
 TOKEN=$(grep SERVICE_API_TOKEN .env | cut -d'=' -f2)
 echo "Service API Token: $TOKEN"
 echo "Beheerder wachtwoord: Welkom01!"
+echo "Site bereikbaar op poort 80"
 echo "-------------------------------------------------------"
