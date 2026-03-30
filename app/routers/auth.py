@@ -1,6 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Response
+from fastapi import APIRouter, Depends, HTTPException, status, Response, Form
+from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from datetime import timedelta
+from typing import Optional
 from app.db.session import get_db
 from app.models import User
 from app.core.auth import verify_password, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
@@ -13,9 +15,26 @@ class LoginRequest(BaseModel):
     password: str
 
 @router.post("/login")
-async def login(response: Response, login_data: LoginRequest, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.username == login_data.username).first()
-    if not user or not verify_password(login_data.password, user.password_hash):
+async def login(
+    response: Response, 
+    username: Optional[str] = Form(None),
+    password: Optional[str] = Form(None),
+    login_data: Optional[LoginRequest] = None,
+    db: Session = Depends(get_db)
+):
+    # Handle both Form and JSON input
+    user_name = username or (login_data.username if login_data else None)
+    user_password = password or (login_data.password if login_data else None)
+
+    if not user_name or not user_password:
+        raise HTTPException(status_code=400, detail="Gebruikersnaam en wachtwoord zijn verplicht")
+
+    user = db.query(User).filter(User.username == user_name).first()
+    if not user or not verify_password(user_password, user.password_hash):
+        # If it's a form request, redirect back with error
+        if username:
+            return RedirectResponse(url="/login?error=1", status_code=status.HTTP_303_SEE_OTHER)
+        
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Onjuiste gebruikersnaam of wachtwoord",
@@ -34,6 +53,10 @@ async def login(response: Response, login_data: LoginRequest, db: Session = Depe
         max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         samesite="lax"
     )
+    
+    # If it's a form request, redirect to dashboard
+    if username:
+        return RedirectResponse(url="/dashboard", status_code=status.HTTP_303_SEE_OTHER)
     
     return {"access_token": access_token, "token_type": "bearer"}
 
