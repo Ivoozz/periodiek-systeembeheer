@@ -2,11 +2,16 @@ from fastapi import APIRouter, Request, Depends
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
-from app.database import get_db
-from app import auth, models
+import os
+from app.db.session import get_db
+from app.core import auth
+from app import models
 
 router = APIRouter(prefix="/admin/v2", tags=["web-dashboard"])
-templates = Jinja2Templates(directory="app/templates")
+
+# Dynamisch pad naar templates
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
 
 @router.get("/", response_class=HTMLResponse)
 async def dashboard_v2(

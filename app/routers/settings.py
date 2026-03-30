@@ -10,7 +10,9 @@ from app.schemas import SystemSettingsResponse
 
 router = APIRouter(prefix="/settings", tags=["Settings"])
 
-UPLOAD_DIR = "/var/www/systeembeheer/app/static/uploads"
+# Dynamisch pad naar uploads
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+UPLOAD_DIR = os.path.join(BASE_DIR, "static", "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 @router.get("/", response_model=SystemSettingsResponse)

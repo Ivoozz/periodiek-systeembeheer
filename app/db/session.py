@@ -9,8 +9,9 @@ load_dotenv()
 
 logger = logging.getLogger(__name__)
 
-# Absoluut pad voor productie uniformiteit
-DATABASE_URL = "sqlite:////var/www/systeembeheer/systeembeheer.db"
+# Dynamische padbepaling
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{os.path.join(BASE_DIR, 'systeembeheer.db')}")
 DATABASE_KEY = os.getenv("DATABASE_KEY")
 
 # We proberen pysqlite3 te laden voor SQLCipher ondersteuning op Python 3.13

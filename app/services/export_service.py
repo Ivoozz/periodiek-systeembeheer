@@ -8,8 +8,9 @@ from io import BytesIO
 class ExportService:
     @staticmethod
     def generate_word_report(report: Report, customer: User):
-        # Absoluut pad voor productie
-        template_path = "/var/www/systeembeheer/app/templates/exports/template.docx"
+        # Dynamisch pad naar exports template
+        BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        template_path = os.path.join(BASE_DIR, "templates", "exports", "template.docx")
         
         if os.path.exists(template_path):
             doc = Document(template_path)

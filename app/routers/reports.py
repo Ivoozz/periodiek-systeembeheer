@@ -5,7 +5,7 @@ from typing import List
 from app.database import get_db
 from app.models import User, Template, Category, Checkpoint, CustomerCheck, Report, ReportItem, ReportKlantpunt
 from app.schemas import ReportCreate, ReportResponse, ReportHistoryItem, TemplateCategory, TemplateCheckpoint
-from app.auth import get_current_user, require_behandelaar
+from app.core.auth import get_current_user, require_behandelaar
 from app.services.export_service import ExportService
 
 router = APIRouter(prefix="/api/reports", tags=["Reports"])

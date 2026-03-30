@@ -43,5 +43,87 @@ class SystemSettingsResponse(SystemSettingsBase):
     updated_at: datetime
     model_config = ConfigDict(from_attributes=True)
 
-# ... Other existing schemas (Report, Checkpoint, etc.) ...
-# I will keep them but focus on the requested changes now.
+# --- Report Schemas ---
+
+class ReportItemBase(BaseModel):
+    categorie: str
+    controlepunt: str
+    resultaat: str # 'OK', 'NOK', 'NVT'
+    toelichting: Optional[str] = None
+
+class ReportItemCreate(ReportItemBase):
+    pass
+
+class ReportItemResponse(ReportItemBase):
+    id: int
+    report_id: int
+    model_config = ConfigDict(from_attributes=True)
+
+class ReportKlantpuntBase(BaseModel):
+    beschrijving: str
+    uitgevoerde_actie: str
+
+class ReportKlantpuntCreate(ReportKlantpuntBase):
+    pass
+
+class ReportKlantpuntResponse(ReportKlantpuntBase):
+    id: int
+    report_id: int
+    model_config = ConfigDict(from_attributes=True)
+
+class ReportBase(BaseModel):
+    customer_id: int
+    medewerker: str
+    datum_uitvoering: date
+    locatie: str
+
+class ReportCreate(ReportBase):
+    items: List[ReportItemCreate]
+    klantpunten: List[ReportKlantpuntCreate]
+
+class ReportResponse(ReportBase):
+    id: int
+    created_at: datetime
+    items: List[ReportItemResponse]
+    klantpunten: List[ReportKlantpuntResponse]
+    model_config = ConfigDict(from_attributes=True)
+
+class ReportHistoryItem(ReportBase):
+    id: int
+    created_at: datetime
+    model_config = ConfigDict(from_attributes=True)
+
+# --- Template Schemas ---
+
+class TemplateCheckpoint(BaseModel):
+    name: str
+
+class TemplateCategory(BaseModel):
+    name: str
+    checkpoints: List[TemplateCheckpoint]
+
+# --- Customer Schemas ---
+
+class CustomerBase(BaseModel):
+    username: str
+
+class CustomerCreate(CustomerBase):
+    password: str
+
+class CustomerResponse(CustomerBase):
+    id: int
+    role: str
+    locatie: Optional[str] = None
+    next_maintenance_date: Optional[date] = None
+    model_config = ConfigDict(from_attributes=True)
+
+class CustomerCheckBase(BaseModel):
+    name: str
+
+class CustomerCheckCreate(CustomerCheckBase):
+    pass
+
+class CustomerCheckResponse(CustomerCheckBase):
+    id: int
+    customer_id: int
+    model_config = ConfigDict(from_attributes=True)

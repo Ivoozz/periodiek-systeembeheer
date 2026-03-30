@@ -67,3 +67,29 @@ async def get_current_user(request: Request, db: Session = Depends(get_db)):
     if user is None:
         raise credentials_exception
     return user
+
+def require_behandelaar(user: User = Depends(get_current_user)):
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Niet ingelogd",
+        )
+    if user.role != "Behandelaar":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Onvoldoende rechten (Behandelaar vereist)",
+        )
+    return user
+
+def require_klant(user: User = Depends(get_current_user)):
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Niet ingelogd",
+        )
+    if user.role != "Klant":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Onvoldoende rechten (Klant vereist)",
+        )
+    return user

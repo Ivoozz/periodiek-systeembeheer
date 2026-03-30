@@ -12,6 +12,9 @@ from app.db.session import engine, Base, get_db
 from app.models import SystemSettings
 from app.routers import auth, users, reports, external, settings
 
+# Dynamische padbepaling
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 # Logging instellen
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -30,7 +33,7 @@ def get_system_settings(db: Session):
 async def lifespan(app: FastAPI):
     logger.info("Applicatie start op...")
     try:
-        os.makedirs("/var/www/systeembeheer/app/static/uploads", exist_ok=True)
+        os.makedirs(os.path.join(BASE_DIR, "app/static/uploads"), exist_ok=True)
     except Exception as e:
         logger.error(f"Fout bij aanmaken mappen: {e}")
 
@@ -46,13 +49,13 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Periodiek Systeembeheer", lifespan=lifespan)
 
 # Static files mounten
-app.mount("/static", StaticFiles(directory="/var/www/systeembeheer/app/static"), name="static")
-templates = Jinja2Templates(directory="/var/www/systeembeheer/app/templates")
+app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "app/static")), name="static")
+templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "app/templates"))
 
 # CACHEBUSTER LOGICA
 def get_static_hash(path: str):
     """Berekent een MD5 hash van een statisch bestand voor cache-busting."""
-    full_path = os.path.join("/var/www/systeembeheer/app/static", path.lstrip("/"))
+    full_path = os.path.join(BASE_DIR, "app/static", path.lstrip("/"))
     if os.path.exists(full_path):
         with open(full_path, "rb") as f:
             return hashlib.md5(f.read()).hexdigest()[:8]
