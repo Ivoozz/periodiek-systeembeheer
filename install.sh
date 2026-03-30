@@ -1,8 +1,9 @@
 #!/bin/bash
-# install.sh v3.0 - ROBUUSTE INSTALLATIE VOOR PRODUCTIE
+# install.sh v3.1 - ROBUUSTE INSTALLATIE MET JUISTE PADEN
 set -e
 
 APP_DIR="/var/www/systeembeheer"
+SOURCE_DIR=$(pwd)
 FORCE_REFRESH=false
 if [[ "$1" == "--force" ]]; then
     FORCE_REFRESH=true
@@ -17,9 +18,15 @@ sudo apt-get install -y python3 python3-pip python3-venv nginx sqlite3 sqlcipher
 # 2. App directory setup
 sudo mkdir -p $APP_DIR/logs $APP_DIR/backups $APP_DIR/app/static/uploads
 sudo chown -R $USER:www-data $APP_DIR
-sudo chmod -R 775 $APP_DIR
 
-# 3. Virtual Environment
+# 3. Bestanden kopiëren (CRUCIAAL)
+echo ">>> Bestanden kopiëren naar $APP_DIR..."
+if [ "$SOURCE_DIR" != "$APP_DIR" ]; then
+    cp -r $SOURCE_DIR/* $APP_DIR/
+    cp $SOURCE_DIR/.env $APP_DIR/ 2>/dev/null || true
+fi
+
+# 4. Virtual Environment
 cd $APP_DIR
 if [ ! -d "venv" ] || [ "$FORCE_REFRESH" = true ]; then
     echo ">>> Venv inrichten..."
@@ -29,7 +36,7 @@ fi
 ./venv/bin/pip install --upgrade pip
 ./venv/bin/pip install -r requirements.txt
 
-# 4. Secrets (.env)
+# 5. Secrets (.env)
 if [ ! -f .env ] || [ "$FORCE_REFRESH" = true ]; then
     echo ">>> Secrets genereren..."
     cat << EOF > .env
@@ -41,12 +48,12 @@ APP_ENV=production
 EOF
 fi
 
-# 5. Database initialiseren
+# 6. Database initialiseren
 echo ">>> Database initialiseren..."
 export PYTHONPATH=$APP_DIR
 ./venv/bin/python3 -m app.seed
 
-# 6. Systemd Service
+# 7. Systemd Service
 echo ">>> Systemd service registreren..."
 sudo tee /etc/systemd/system/systeembeheer.service > /dev/null << EOF
 [Unit]
@@ -70,7 +77,7 @@ sudo systemctl daemon-reload
 sudo systemctl enable systeembeheer
 sudo systemctl restart systeembeheer
 
-# 7. Nginx Configuratie
+# 8. Nginx Configuratie
 echo ">>> Nginx configureren op poort 80..."
 sudo tee /etc/nginx/sites-available/systeembeheer > /dev/null << 'EOF'
 server {
