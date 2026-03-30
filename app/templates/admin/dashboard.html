@@ -1,84 +1,60 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="mb-8">
-    <h1 class="text-2xl font-bold text-gray-900">Beheer Dashboard</h1>
-    <p class="text-gray-500">Welkom terug, {{ user.username }}. Hier is een overzicht van de huidige status.</p>
+<div>
+    <h1 class="text-3xl font-bold text-white">Beheer Dashboard</h1>
+    <p class="text-muted mt-2">Welkom terug, {{ user.username }}. Hier is een overzicht van de huidige status.</p>
 </div>
 
 <!-- KPI Cards -->
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-        <div class="flex items-center justify-between mb-4">
-            <div class="p-2 bg-blue-50 rounded-lg text-blue-600">
-                <i class="fas fa-users text-xl"></i>
-            </div>
-            <span class="text-green-500 text-sm font-semibold flex items-center gap-1">
-                <i class="fas fa-arrow-up text-xs"></i> 12%
-            </span>
-        </div>
-        <h3 class="text-gray-500 text-sm font-medium">Totaal Klanten</h3>
-        <p class="text-2xl font-bold text-gray-900 mt-1" id="kpi-klanten">-</p>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 my-8">
+    <div class="card p-6">
+        <h3 class="text-sm font-medium text-muted">Totaal Klanten</h3>
+        <p class="text-3xl font-bold text-white mt-2" id="kpi-klanten">-</p>
     </div>
-
-    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-        <div class="flex items-center justify-between mb-4">
-            <div class="p-2 bg-purple-50 rounded-lg text-purple-600">
-                <i class="fas fa-robot text-xl"></i>
-            </div>
-            <span class="text-green-500 text-sm font-semibold flex items-center gap-1">
-                <i class="fas fa-check text-xs"></i> Live
-            </span>
-        </div>
-        <h3 class="text-gray-500 text-sm font-medium">API Runs (Vandaag)</h3>
-        <p class="text-2xl font-bold text-gray-900 mt-1" id="kpi-api-runs">142</p>
+    <div class="card p-6">
+        <h3 class="text-sm font-medium text-muted">API Runs (Vandaag)</h3>
+        <p class="text-3xl font-bold text-white mt-2" id="kpi-api-runs">142</p>
     </div>
-
-    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-        <div class="flex items-center justify-between mb-4">
-            <div class="p-2 bg-red-50 rounded-lg text-red-600">
-                <i class="fas fa-exclamation-triangle text-xl"></i>
-            </div>
-            <span class="text-red-500 text-sm font-semibold">Actie vereist</span>
-        </div>
-        <h3 class="text-gray-500 text-sm font-medium">NOK Meldingen</h3>
-        <p class="text-2xl font-bold text-gray-900 mt-1" id="kpi-nok">3</p>
+    <div class="card p-6">
+        <h3 class="text-sm font-medium text-muted">NOK Meldingen</h3>
+        <p class="text-3xl font-bold text-white mt-2" id="kpi-nok">3</p>
     </div>
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
     <!-- Klanten Lijst -->
-    <div class="lg:col-span-1 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div class="p-6 border-b border-gray-100 flex justify-between items-center">
-            <h2 class="font-bold text-gray-900">Actieve Klanten</h2>
-            <button onclick="showAddCustomer()" class="text-blue-600 hover:text-blue-700 text-sm font-semibold">
-                <i class="fas fa-plus mr-1"></i> Nieuw
+    <div class="lg:col-span-1 card overflow-hidden">
+        <div class="p-6 border-b border-dark flex justify-between items-center">
+            <h2 class="font-bold text-white">Actieve Klanten</h2>
+            <button onclick="showAddCustomer()" class="text-primary-accent hover:text-primary-accent-hover text-sm font-semibold">
+                 Nieuw
             </button>
         </div>
         <div class="overflow-y-auto max-h-[400px]">
-            <ul id="customer-list" class="divide-y divide-gray-50">
-                <li class="p-4 text-center text-gray-500 italic text-sm">Klanten laden...</li>
+            <ul id="customer-list">
+                <li class="p-4 text-center text-muted italic text-sm">Klanten laden...</li>
             </ul>
         </div>
     </div>
 
     <!-- Recente Rapporten -->
-    <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div class="p-6 border-b border-gray-100">
-            <h2 class="font-bold text-gray-900">Recente Rapportages</h2>
+    <div class="lg:col-span-2 card overflow-hidden">
+        <div class="p-6 border-b border-dark">
+            <h2 class="font-bold text-white">Recente Rapportages</h2>
         </div>
         <div class="overflow-x-auto">
             <table class="w-full text-left">
-                <thead class="bg-gray-50 border-b border-gray-100">
+                <thead class="border-b border-dark">
                     <tr>
-                        <th class="p-4 text-xs font-semibold text-gray-500 uppercase">Klant</th>
-                        <th class="p-4 text-xs font-semibold text-gray-500 uppercase">Datum</th>
-                        <th class="p-4 text-xs font-semibold text-gray-500 uppercase">Medewerker</th>
-                        <th class="p-4 text-xs font-semibold text-gray-500 uppercase text-right">Exports</th>
+                        <th class="p-4 text-xs font-semibold text-muted uppercase">Klant</th>
+                        <th class="p-4 text-xs font-semibold text-muted uppercase">Datum</th>
+                        <th class="p-4 text-xs font-semibold text-muted uppercase">Medewerker</th>
+                        <th class="p-4 text-xs font-semibold text-muted uppercase text-right">Exports</th>
                     </tr>
                 </thead>
                 <tbody id="reports-list">
-                    <tr><td colspan="4" class="p-4 text-center text-gray-500 italic text-sm">Rapporten laden...</td></tr>
+                    <tr><td colspan="4" class="p-4 text-center text-muted italic text-sm">Rapporten laden...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -99,21 +75,20 @@
             
             customers.forEach(c => {
                 const li = document.createElement('li');
-                li.className = 'p-4 hover:bg-gray-50 flex justify-between items-center transition-colors';
+                li.className = 'p-4 flex justify-between items-center transition-colors border-b border-dark hover:bg-gray-800';
                 li.innerHTML = `
                     <div>
-                        <p class="font-semibold text-gray-900">${c.username}</p>
-                        <p class="text-xs text-gray-500">ID: ${c.id}</p>
+                        <p class="font-semibold text-white">${c.username}</p>
+                        <p class="text-xs text-muted">ID: ${c.id}</p>
                     </div>
-                    <a href="/admin/checklist/${c.id}" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Nieuwe Controle">
+                    <a href="/admin/checklist/${c.id}" class="p-2 text-primary-accent" title="Nieuwe Controle">
                         <i class="fas fa-clipboard-check"></i>
                     </a>
                 `;
                 custContainer.appendChild(li);
             });
 
-            // Fetch Reports (We'll use a generic endpoint or fetch per customer and flatten for now)
-            // For the prototype, we fetch history for each customer to show "Recente Rapporten"
+            // Fetch Reports
             const allReports = [];
             for (const c of customers) {
                 const repRes = await fetch(`/api/reports/history/${c.id}`);
@@ -130,21 +105,21 @@
             reportsTable.innerHTML = '';
             
             if (allReports.length === 0) {
-                reportsTable.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-500 text-sm">Geen rapporten gevonden.</td></tr>';
+                reportsTable.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-muted text-sm">Geen rapporten gevonden.</td></tr>';
             } else {
                 allReports.slice(0, 10).forEach(r => {
                     const row = document.createElement('tr');
-                    row.className = 'border-b border-gray-50 hover:bg-gray-50 transition-colors';
+                    row.className = 'border-b border-dark hover:bg-gray-800';
                     const date = new Date(r.datum_uitvoering).toLocaleDateString('nl-NL');
                     row.innerHTML = `
-                        <td class="p-4 text-sm font-medium text-gray-900">${r.customer_name}</td>
-                        <td class="p-4 text-sm text-gray-600">${date}</td>
-                        <td class="p-4 text-sm text-gray-600">${r.medewerker}</td>
+                        <td class="p-4 text-sm font-medium text-white">${r.customer_name}</td>
+                        <td class="p-4 text-sm text-muted">${date}</td>
+                        <td class="p-4 text-sm text-muted">${r.medewerker}</td>
                         <td class="p-4 text-right space-x-2">
-                            <a href="/api/reports/${r.id}/export/word" class="inline-flex items-center p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors" title="Export naar Word">
+                            <a href="/api/reports/${r.id}/export/word" class="inline-flex items-center p-2 rounded-lg hover:bg-gray-700" title="Export naar Word">
                                 <i class="fas fa-file-word"></i>
                             </a>
-                            <a href="/api/reports/${r.id}/export/excel" class="inline-flex items-center p-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors" title="Export naar Excel">
+                            <a href="/api/reports/${r.id}/export/excel" class="inline-flex items-center p-2 rounded-lg hover:bg-gray-700" title="Export naar Excel">
                                 <i class="fas fa-file-excel"></i>
                             </a>
                         </td>
@@ -165,3 +140,4 @@
     initDashboard();
 </script>
 {% endblock %}
+

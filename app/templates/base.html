@@ -4,64 +4,41 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ settings.header_text }}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-    </style>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>
 </head>
-<body class="bg-gray-50 text-gray-900 flex flex-col min-h-screen">
+<body class="flex flex-col min-h-screen">
     <!-- Navbar -->
-    <nav class="bg-white border-b border-gray-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16 items-center">
+    <nav class="card" style="border-radius: 0; border-bottom: 1px solid var(--border-dark);">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between h-20 items-center">
                 <div class="flex items-center">
                     {% if settings.logo_url %}
                         <img class="h-10 w-auto" src="{{ settings.logo_url }}" alt="Logo">
                     {% else %}
-                        <span class="text-xl font-bold text-indigo-600">{{ settings.header_text }}</span>
+                        <span class="text-2xl font-bold text-white">{{ settings.header_text }}</span>
                     {% endif %}
                 </div>
                 <div class="flex items-center space-x-4">
-                    <button onclick="changeOwnPassword()" class="text-sm text-gray-500 hover:text-indigo-600 font-medium">Wachtwoord wijzigen</button>
-                    <a href="/logout" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition-colors">Uitloggen</a>
+                    {% if request.path != '/login' %}
+                    <a href="/admin/settings" class="text-sm text-gray-400 hover:text-white font-medium transition-colors">Instellingen</a>
+                    <a href="/logout" class="btn btn-primary" style="background-color: var(--card-dark); color: var(--text-light); border: 1px solid var(--border-dark);">Uitloggen</a>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </nav>
 
     <!-- Main Content -->
-    <main class="flex-grow">
+    <main class="flex-grow container mx-auto px-4 py-8 sm:py-12">
         {% block content %}{% endblock %}
     </main>
 
     <!-- Footer -->
-    <footer class="bg-white border-t border-gray-200 py-8">
-        <div class="max-w-7xl mx-auto px-4 text-center text-gray-500 text-sm">
+    <footer class="py-8">
+        <div class="container mx-auto px-4 text-center text-muted text-sm">
             <p>{{ settings.footer_text }}</p>
         </div>
     </footer>
-
-    <script>
-        async function changeOwnPassword() {
-            const oldPassword = prompt('Voer je huidige wachtwoord in:');
-            if (!oldPassword) return;
-            const newPassword = prompt('Voer je nieuwe wachtwoord in:');
-            if (!newPassword) return;
-
-            const response = await fetch('/users/change-password', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ old_password: oldPassword, new_password: newPassword })
-            });
-
-            if (response.ok) {
-                alert('Wachtwoord succesvol gewijzigd!');
-            } else {
-                const err = await response.json();
-                alert('Fout: ' + err.detail);
-            }
-        }
-    </script>
 </body>
 </html>

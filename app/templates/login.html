@@ -1,20 +1,29 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="max-w-md mx-auto bg-white p-8 rounded shadow-md mt-10">
-    <h2 class="text-2xl mb-6 font-semibold text-center">Inloggen</h2>
-    {% if request.query_params.get("error") %}
-        <p class="text-red-500 mb-4 text-sm text-center">Ongeldige gebruikersnaam of wachtwoord.</p>
-    {% endif %}
-    <form action="/login" method="POST" class="space-y-4">
-        <div>
-            <label class="block text-sm font-medium mb-1">Gebruikersnaam</label>
-            <input type="text" name="username" class="w-full border p-2 rounded" required>
+<div class="flex items-center justify-center min-h-full" style="padding-top: 5vh;">
+    <div class="w-full max-w-md">
+        <div class="card p-8 md:p-10">
+            <h2 class="text-3xl mb-6 font-bold text-center text-white">Inloggen</h2>
+            {% if request.query_params.get("error") %}
+            <div class="bg-red-900 border border-red-500 text-red-300 px-4 py-3 rounded-lg mb-6 text-sm" role="alert">
+                <p>Ongeldige gebruikersnaam of wachtwoord.</p>
+            </div>
+            {% endif %}
+            <form action="/login" method="POST" class="space-y-6">
+                <div>
+                    <label for="username" class="form-label">Gebruikersnaam</label>
+                    <input id="username" type="text" name="username" class="form-input" required autocomplete="username" autofocus>
+                </div>
+                <div>
+                    <label for="password" class="form-label">Wachtwoord</label>
+                    <input id="password" type="password" name="password" class="form-input" required autocomplete="current-password">
+                </div>
+                <button type="submit" class="w-full btn btn-primary">Inloggen</button>
+            </form>
         </div>
-        <div>
-            <label class="block text-sm font-medium mb-1">Wachtwoord</label>
-            <input type="password" name="password" class="w-full border p-2 rounded" required>
-        </div>
-        <button type="submit" class="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700">Inloggen</button>
-    </form>
+        <p class="text-center text-sm text-muted mt-6">
+            Login om toegang te krijgen tot het beheerportaal.
+        </p>
+    </div>
 </div>
 {% endblock %}
