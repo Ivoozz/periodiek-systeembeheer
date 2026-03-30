@@ -1,33 +1,36 @@
 #!/bin/bash
-# install.sh v2.4 - Productie-klare uitrol voor Debian LXC (Clean DB & Env)
+# install.sh v2.5 - Productie-klare uitrol voor Debian LXC (Guaranteed Port 80)
 set -e
 
 # Controleer op --force vlag
 FORCE_REFRESH=false
 if [[ "$1" == "--force" ]]; then
     FORCE_REFRESH=true
-    echo "WAARSCHUWING: Force Refresh geactiveerd. Bestaande configuratie en database worden gewist!"
+    echo "WAARSCHUWING: Force Refresh geactiveerd."
 fi
 
 echo "Systeembeheer Productie Installatie Start..."
 
 # 1. Systeem pakketten installeren
 sudo apt-get update
-sudo apt-get install -y python3 python3-pip python3-venv nginx sqlite3 sqlcipher libsqlcipher-dev openssl
+sudo apt-get install -y python3 python3-pip python3-venv nginx sqlite3 sqlcipher libsqlcipher-dev openssl curl net-tools
 
 # 2. App directory setup
 APP_DIR="/var/www/systeembeheer"
 sudo mkdir -p $APP_DIR
 sudo mkdir -p $APP_DIR/logs
 sudo mkdir -p $APP_DIR/backups
+sudo mkdir -p $APP_DIR/app/static/uploads
 sudo chown -R $USER:$USER $APP_DIR
 
-# 3. Bestanden kopiëren
+# 3. Bestanden kopiëren naar de doelmap
+echo "Bestanden kopiëren..."
 cp -r . $APP_DIR/
 cd $APP_DIR
 
 # 4. Virtual Environment instellen
 if [ ! -d "venv" ] || [ "$FORCE_REFRESH" = true ]; then
+    echo "Venv inrichten..."
     rm -rf venv
     python3 -m venv venv
 fi
@@ -37,11 +40,10 @@ pip install -r requirements.txt
 
 # 5. Secrets genereren (.env)
 if [ ! -f .env ] || [ "$FORCE_REFRESH" = true ]; then
-    echo "Secrets genereren voor .env..."
+    echo "Secrets genereren..."
     DB_KEY=$(openssl rand -hex 32)
     JWT_SECRET=$(openssl rand -hex 32)
     SERVICE_TOKEN=$(openssl rand -hex 24)
-    # Altijd een nieuwe .env bij --force
     cat << EOF > .env
 DATABASE_KEY=$DB_KEY
 JWT_SECRET=$JWT_SECRET
@@ -49,21 +51,19 @@ SERVICE_API_TOKEN=$SERVICE_TOKEN
 ADMIN_PASSWORD=Welkom01!
 APP_ENV=production
 EOF
-    echo "Nieuwe .env aangemaakt met unieke sleutels."
 fi
 
-# 6. Database herinitialiseren bij force
+# 6. Database initialiseren
 if [ "$FORCE_REFRESH" = true ]; then
-    echo "Oude database verwijderen voor schone schema-opzet..."
     rm -f systeembeheer.db
 fi
-
 echo "Database initialiseren..."
 export PYTHONPATH=$APP_DIR
-python3 -m app.seed
+venv/bin/python3 -m app.seed
 
-# 7. Systemd Service instellen
-cat << EOF | sudo tee /etc/systemd/system/systeembeheer.service
+# 7. Systemd Service instellen (GEGARANDEERD)
+echo "Systemd service registreren..."
+sudo tee /etc/systemd/system/systeembeheer.service > /dev/null << EOF
 [Unit]
 Description=Gunicorn Systeembeheer Service
 After=network.target
@@ -74,7 +74,8 @@ Group=www-data
 WorkingDirectory=$APP_DIR
 Environment="PATH=$APP_DIR/venv/bin"
 Environment="PYTHONPATH=$APP_DIR"
-ExecStart=$APP_DIR/venv/bin/gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 127.0.0.1:8000
+ExecStart=$APP_DIR/venv/bin/gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 127.0.0.1:8000 --access-logfile $APP_DIR/logs/access.log --error-logfile $APP_DIR/logs/error.log
+Restart=always
 
 [Install]
 WantedBy=multi-user.target
@@ -84,16 +85,31 @@ sudo systemctl daemon-reload
 sudo systemctl enable systeembeheer
 sudo systemctl restart systeembeheer
 
-# 8. Nginx Configuratie
-cat << 'EOF' | sudo tee /etc/nginx/sites-available/systeembeheer
+# Wacht even en check status
+sleep 2
+if ! systemctl is-active --quiet systeembeheer; then
+    echo "FOUT: Backend service (Gunicorn) is niet gestart. Check logs: journalctl -u systeembeheer"
+    exit 1
+fi
+
+# 8. Nginx Configuratie (ECHT POORT 80)
+echo "Nginx configureren op poort 80..."
+sudo tee /etc/nginx/sites-available/systeembeheer > /dev/null << 'EOF'
 server {
     listen 80 default_server;
     listen [::]:80 default_server;
     server_name _;
 
+    # Verwijder oude security headers die problemen kunnen geven
+    server_tokens off;
+
     location / {
         proxy_pass http://127.0.0.1:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
         proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
@@ -103,7 +119,6 @@ server {
     location /static/ {
         alias /var/www/systeembeheer/app/static/;
         expires 30d;
-        add_header Cache-Control "public, no-transform";
     }
 }
 EOF
@@ -113,14 +128,9 @@ sudo rm -f /etc/nginx/sites-enabled/default || true
 sudo nginx -t
 sudo systemctl restart nginx
 
-# 9. Backup Cron-job
-(crontab -l 2>/dev/null | grep -v "scripts/backup.sh"; echo "0 2 * * * /bin/bash $APP_DIR/scripts/backup.sh") | crontab -
-
 echo "-------------------------------------------------------"
-echo "Installatie voltooid!"
-# We halen de token DIRECT uit het bestand om zeker te zijn
+echo "INSTALLATIE VOLTOOID OP POORT 80!"
 TOKEN=$(grep "SERVICE_API_TOKEN=" .env | cut -d'=' -f2)
 echo "SERVICE API TOKEN: $TOKEN"
-echo "Beheerder wachtwoord: Welkom01!"
-echo "Site bereikbaar op: http://$(hostname -I | awk '{print $1}')"
+echo "SITE BEREIKBAAR OP: http://$(hostname -I | awk '{print $1}')"
 echo "-------------------------------------------------------"
