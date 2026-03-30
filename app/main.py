@@ -11,6 +11,7 @@ import hashlib
 from app.db.session import engine, Base, get_db
 from app.models import SystemSettings, User
 from app.routers import users, reports, settings, customers, auth
+from app.core.auth import get_current_user, require_behandelaar
 from app.api.v1 import external
 from app.web import dashboard
 
@@ -93,11 +94,11 @@ async def login_page(request: Request, db: Session = Depends(get_db)):
     return templates.TemplateResponse("login.html", {"request": request, "settings": settings})
 
 @app.get("/dashboard")
-async def dashboard_page(request: Request, db: Session = Depends(get_db), current_user: User = Depends(auth.get_current_user)):
+async def dashboard_page(request: Request, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     settings = get_system_settings(db)
     return templates.TemplateResponse("admin/dashboard.html", {"request": request, "settings": settings, "user": current_user})
 
 @app.get("/admin/instellingen")
-async def settings_page(request: Request, db: Session = Depends(get_db), current_user: User = Depends(auth.require_behandelaar)):
+async def settings_page(request: Request, db: Session = Depends(get_db), current_user: User = Depends(require_behandelaar)):
     settings = get_system_settings(db)
     return templates.TemplateResponse("admin/settings.html", {"request": request, "settings": settings, "user": current_user})
