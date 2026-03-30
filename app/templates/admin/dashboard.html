@@ -2,10 +2,10 @@
 {% block content %}
 <div class="flex">
     <!-- Sidebar -->
-    <aside class="w-64 bg-white shadow-md rounded p-4 h-full min-h-[500px] border border-slate-200">
-        <h3 class="font-bold text-gray-700 mb-4 px-2 uppercase text-xs tracking-wider">Beheer</h3>
+    <aside class="w-64 bg-white shadow-md rounded p-4 h-full min-h-[500px]">
+        <h3 class="font-bold text-gray-700 mb-4 px-2">Beheer</h3>
         <ul class="space-y-2">
-            <li><a href="/admin" class="block p-2 bg-blue-50 text-blue-700 rounded font-medium">Overzicht</a></li>
+            <li><a href="/admin" class="block p-2 bg-blue-100 text-blue-700 rounded font-medium">Overzicht</a></li>
             <li><a href="#" class="block p-2 text-gray-600 hover:bg-gray-100 rounded">Instellingen</a></li>
         </ul>
     </aside>
@@ -13,19 +13,19 @@
     <!-- Main Content -->
     <div class="flex-1 ml-6">
         <div class="flex justify-between items-center mb-6">
-            <h2 class="text-3xl font-bold text-gray-800">Klanten Overzicht</h2>
+            <h2 class="text-2xl font-bold text-gray-800">Klanten Overzicht</h2>
             <div class="space-x-2">
-                <button class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold shadow-md hover:bg-blue-700 transition" onclick="showAddCustomerModal()">+ Klant Toevoegen</button>
+                <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700" onclick="showAddCustomer()">Klant Toevoegen</button>
             </div>
         </div>
 
-        <div class="bg-white shadow-md rounded-xl overflow-hidden border border-slate-200">
+        <div class="bg-white shadow-md rounded overflow-hidden">
             <table class="w-full text-left">
-                <thead class="bg-slate-50 border-b">
+                <thead class="bg-gray-50 border-b">
                     <tr>
-                        <th class="p-4 font-bold text-slate-600">ID</th>
-                        <th class="p-4 font-bold text-slate-600">Gebruikersnaam</th>
-                        <th class="p-4 font-bold text-slate-600">Acties</th>
+                        <th class="p-4 font-semibold text-gray-600">ID</th>
+                        <th class="p-4 font-semibold text-gray-600">Gebruikersnaam</th>
+                        <th class="p-4 font-semibold text-gray-600">Acties</th>
                     </tr>
                 </thead>
                 <tbody id="customer-list">
@@ -34,27 +34,6 @@
                 </tbody>
             </table>
         </div>
-    </div>
-</div>
-
-<!-- Modal voor Klant Toevoegen -->
-<div id="addCustomerModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
-    <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md border border-slate-200">
-        <h3 class="text-2xl font-bold text-slate-800 mb-6">Nieuwe Klant Toevoegen</h3>
-        <form id="addCustomerForm" class="space-y-4">
-            <div>
-                <label class="block text-sm font-semibold text-slate-700 mb-1">Gebruikersnaam</label>
-                <input type="text" id="newUsername" name="username" required class="w-full border p-2 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-            </div>
-            <div>
-                <label class="block text-sm font-semibold text-slate-700 mb-1">Wachtwoord</label>
-                <input type="password" id="newPassword" name="password" required class="w-full border p-2 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-            </div>
-            <div class="flex gap-4 pt-4">
-                <button type="button" onclick="hideAddCustomerModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 rounded-lg transition">Annuleren</button>
-                <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg transition">Opslaan</button>
-            </div>
-        </form>
     </div>
 </div>
 
@@ -74,16 +53,14 @@
 
             customers.forEach(c => {
                 const row = document.createElement('tr');
-                row.className = 'border-b hover:bg-slate-50 transition';
+                row.className = 'border-b hover:bg-gray-50';
                 row.innerHTML = `
-                    <td class="p-4 text-slate-500 text-sm">#${c.id}</td>
-                    <td class="p-4 font-medium text-slate-800">${c.username}</td>
-                    <td class="p-4 space-x-4">
-                        <a href="/admin/checklist/${c.id}" class="text-blue-600 hover:text-blue-800 font-bold text-sm">Nieuwe Controle</a>
-                        <span class="text-slate-300">|</span>
-                        <a href="/klant/history/${c.id}" class="text-slate-600 hover:text-slate-800 text-sm">Rapportages</a>
-                        <span class="text-slate-300">|</span>
-                        <button onclick="deleteCustomer(${c.id})" class="text-red-600 hover:text-red-800 text-sm">Verwijderen</button>
+                    <td class="p-4">${c.id}</td>
+                    <td class="p-4">${c.username}</td>
+                    <td class="p-4 space-x-2">
+                        <a href="/admin/checklist/${c.id}" class="text-blue-600 hover:underline font-medium">Nieuwe Controle</a>
+                        <span class="text-gray-300">|</span>
+                        <a href="#" class="text-gray-600 hover:underline">Rapportages</a>
                     </td>
                 `;
                 list.appendChild(row);
@@ -94,52 +71,8 @@
         }
     }
 
-    function showAddCustomerModal() {
-        document.getElementById('addCustomerModal').classList.remove('hidden');
-    }
-
-    function hideAddCustomerModal() {
-        document.getElementById('addCustomerModal').classList.add('hidden');
-        document.getElementById('addCustomerForm').reset();
-    }
-
-    document.getElementById('addCustomerForm').onsubmit = async (e) => {
-        e.preventDefault();
-        const username = document.getElementById('newUsername').value;
-        const password = document.getElementById('newPassword').value;
-
-        try {
-            const res = await fetch('/api/customers/', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            });
-
-            if (res.ok) {
-                hideAddCustomerModal();
-                fetchCustomers();
-            } else {
-                const error = await res.json();
-                alert("Fout bij aanmaken klant: " + (error.detail || "Onbekende fout"));
-            }
-        } catch (err) {
-            alert("Netwerkfout bij aanmaken klant.");
-        }
-    };
-
-    async function deleteCustomer(id) {
-        if (!confirm("Weet u zeker dat u deze klant wilt verwijderen?")) return;
-        
-        try {
-            const res = await fetch(`/api/customers/${id}`, { method: 'DELETE' });
-            if (res.ok) {
-                fetchCustomers();
-            } else {
-                alert("Fout bij verwijderen klant.");
-            }
-        } catch (err) {
-            alert("Netwerkfout bij verwijderen klant.");
-        }
+    function showAddCustomer() {
+        alert("Klant toevoegen is nog niet geïmplementeerd in dit prototype.");
     }
 
     fetchCustomers();

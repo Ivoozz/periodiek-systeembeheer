@@ -1,8 +1,11 @@
 fastapi==0.111.0
 uvicorn==0.30.1
+gunicorn==22.0.0
 sqlalchemy>=2.0.36
 jinja2==3.1.4
 python-multipart==0.0.9
 bcrypt==4.0.1
 passlib[bcrypt]==1.7.4
 python-jose[cryptography]==3.3.0
+pydantic-settings==2.2.1
+pysqlcipher3==1.2.1

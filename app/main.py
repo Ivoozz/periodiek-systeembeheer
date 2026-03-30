@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.database import engine, Base, get_db
 from app import models, auth, schemas
 from app.routers import customers, reports
+from app.web import dashboard
 
 # Ensure tables exist
 Base.metadata.create_all(bind=engine)
@@ -14,6 +15,7 @@ templates = Jinja2Templates(directory="app/templates")
 
 app.include_router(customers.router)
 app.include_router(reports.router)
+app.include_router(dashboard.router)
 
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request, user: models.User = Depends(auth.get_current_user)):
@@ -22,7 +24,8 @@ def index(request: Request, user: models.User = Depends(auth.get_current_user)):
     if user.role == "Behandelaar":
         return RedirectResponse(url="/admin", status_code=302)
     else:
-        return RedirectResponse(url="/klant", status_code=302)
+        # Default fallback, in the future this could be /klant
+        return RedirectResponse(url="/login", status_code=302)
 
 @app.get("/login", response_class=HTMLResponse)
 def login_get(request: Request, user: models.User = Depends(auth.get_current_user)):
@@ -59,21 +62,7 @@ def admin_dashboard(request: Request, user: models.User = Depends(auth.require_b
 
 @app.get("/admin/checklist/{customer_id}", response_class=HTMLResponse)
 def admin_checklist(request: Request, customer_id: int, user: models.User = Depends(auth.require_behandelaar)):
-    from datetime import date
-    return templates.TemplateResponse("admin/checklist.html", {
-        "request": request, 
-        "user": user, 
-        "customer_id": customer_id,
-        "today": date.today().isoformat()
-    })
-
-@app.get("/klant", response_class=HTMLResponse)
-def klant_dashboard(request: Request, user: models.User = Depends(auth.require_klant)):
-    return templates.TemplateResponse("klant/dashboard.html", {"request": request, "user": user})
-
-@app.get("/klant/rapport/{report_id}", response_class=HTMLResponse)
-def klant_report(request: Request, report_id: int, user: models.User = Depends(auth.require_klant)):
-    return templates.TemplateResponse("klant/report_view.html", {"request": request, "user": user, "report_id": report_id})
+    return templates.TemplateResponse("admin/checklist.html", {"request": request, "user": user, "customer_id": customer_id})
 
 @app.get("/api/health")
 def health_check():

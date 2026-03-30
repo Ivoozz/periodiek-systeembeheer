@@ -1,42 +1,68 @@
 #!/bin/bash
-# install.sh - One-click deployment script voor Debian LXC
+# install.sh - Productie-klare deployment script voor Debian LXC
 set -e
 
-echo "Systeembeheer Installatie Start..."
+echo "Systeembeheer Productie-Installatie Start..."
 
-# Installeer systeem pakketten
-sudo apt-get update
-sudo apt-get install -y python3 python3-pip python3-venv nginx sqlite3
-
-# App directory setup
+# Bepaal de huidige gebruiker
+CURRENT_USER=$(whoami)
 APP_DIR="/var/www/systeembeheer"
-sudo mkdir -p $APP_DIR
-sudo chown -R $USER:$USER $APP_DIR
 
-# Kopieer bronbestanden (ervan uitgaande dat we in de repo root zijn)
+# 1. Installeer systeem pakketten inclusief SQLCipher
+echo "Installeren van systeem pakketten..."
+sudo apt-get update
+sudo apt-get install -y python3 python3-pip python3-venv nginx sqlcipher libsqlcipher-dev build-essential openssl
+
+# 2. App directory setup
+echo "Inrichten van directory: $APP_DIR"
+sudo mkdir -p $APP_DIR
+sudo chown -R $CURRENT_USER:$CURRENT_USER $APP_DIR
+
+# 3. Kopieer bronbestanden
+echo "Kopiëren van bestanden..."
 cp -r . $APP_DIR/
 cd $APP_DIR
 
-# Virtual Environment setup
+# 4. Automate .env configuratie (DATABASE_KEY & JWT_SECRET)
+if [ ! -f ".env" ]; then
+    echo "Genereren van nieuwe .env configuratie..."
+    DATABASE_KEY=$(openssl rand -hex 32)
+    JWT_SECRET=$(openssl rand -hex 32)
+    cat <<EOF > .env
+DATABASE_KEY=$DATABASE_KEY
+JWT_SECRET=$JWT_SECRET
+ADMIN_PASSWORD=Welkom01!
+APP_ENV=production
+EOF
+else
+    echo ".env bestand bestaat al, overslaan van generatie."
+fi
+
+# 5. Virtual Environment setup & installatie
+echo "Setup van Python Virtual Environment..."
 python3 -m venv venv
 source venv/bin/activate
+pip install --upgrade pip
 pip install -r requirements.txt
 
-# Initialiseer Database & Seed Data
+# 6. Initialiseer Database & Seed Data
+echo "Initialiseren van de database..."
 python3 -m app.seed
 
-# Systemd Service Configuratie
-cat << 'EOF' | sudo tee /etc/systemd/system/systeembeheer.service
+# 7. Systemd Service Configuratie (Gunicorn)
+echo "Configureren van Systemd service..."
+cat << EOF | sudo tee /etc/systemd/system/systeembeheer.service
 [Unit]
-Description=FastAPI Systeembeheer Service
+Description=Gunicorn Systeembeheer Service
 After=network.target
 
 [Service]
-User=root
+User=$CURRENT_USER
 Group=www-data
-WorkingDirectory=/var/www/systeembeheer
-Environment="PATH=/var/www/systeembeheer/venv/bin"
-ExecStart=/var/www/systeembeheer/venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000
+WorkingDirectory=$APP_DIR
+EnvironmentFile=$APP_DIR/.env
+Environment="PATH=$APP_DIR/venv/bin"
+ExecStart=$APP_DIR/venv/bin/gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.main:app --bind 127.0.0.1:8000
 
 [Install]
 WantedBy=multi-user.target
@@ -44,9 +70,10 @@ EOF
 
 sudo systemctl daemon-reload
 sudo systemctl enable systeembeheer
-sudo systemctl start systeembeheer
+sudo systemctl start systeembeheer || (journalctl -u systeembeheer --no-pager | tail -n 20 && exit 1)
 
-# Nginx Configuratie (Port 80 naar 8000)
+# 8. Nginx Configuratie (Reverse Proxy)
+echo "Configureren van Nginx..."
 cat << 'EOF' | sudo tee /etc/nginx/sites-available/systeembeheer
 server {
     listen 80;
@@ -67,4 +94,12 @@ sudo rm -f /etc/nginx/sites-enabled/default
 sudo nginx -t
 sudo systemctl restart nginx
 
-echo "Installatie voltooid. Applicatie draait op poort 80."
+# 9. Setup Cron-job voor backup.sh
+echo "Instellen van de nachtelijke backup..."
+chmod +x scripts/backup.sh
+mkdir -p logs
+# Voorkom dubbele cronjobs
+(crontab -l 2>/dev/null | grep -v "scripts/backup.sh"; echo "0 2 * * * /bin/bash $APP_DIR/scripts/backup.sh >> $APP_DIR/logs/backup.log 2>&1") | crontab -
+
+echo "Productie-installatie voltooid. Applicatie draait op poort 80."
+echo "Backup is ingesteld voor elke nacht om 02:00 uur (Logs: $APP_DIR/logs/backup.log)."
