@@ -43,9 +43,14 @@ for arg in "$@"; do
     if [ "$arg" == "--reset-db" ]; then
         echo ">>> WAARSCHUWING: Database wordt gereset vanwege schema wijzigingen!"
         rm -f data.db
+        # Zorg dat de map schrijfbaar is voor de gebruiker
+        sudo chown $USER:$USER .
     fi
 done
 "$VENV_DIR/bin/python" seed.py
+# Zorg dat de database lees/schrijfbaar is voor de service
+sudo chown $USER:www-data data.db || true
+chmod 664 data.db || true
 
 # 4. Secrets (.env)
 if [ ! -f .env ]; then
