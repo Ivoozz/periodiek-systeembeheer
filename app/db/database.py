@@ -20,6 +20,8 @@ import pysqlite3
 
 def get_connection():
     conn = pysqlite3.connect(DB_PATH, check_same_thread=False)
+    # Set key immediately on raw connection
+    conn.execute(f"PRAGMA key = '{DATABASE_KEY}'")
     return conn
 
 engine = create_engine(
@@ -30,10 +32,8 @@ engine = create_engine(
 
 @event.listens_for(engine, "connect")
 def set_sqlite_pragma(dbapi_connection, connection_record):
+    # Pragmas already set in creator or here
     cursor = dbapi_connection.cursor()
-    # Apply SQLCipher encryption key
-    cursor.execute(f"PRAGMA key = '{DATABASE_KEY}'")
-    # Recommended settings for modern SQLite
     cursor.execute("PRAGMA journal_mode=WAL")
     cursor.execute("PRAGMA synchronous=NORMAL")
     cursor.close()
