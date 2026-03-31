@@ -6,6 +6,7 @@ from typing import Annotated, Optional
 from app.db.database import get_db
 from app.db.models import Customer, User
 from app.core.auth import require_admin
+from app.core.auth import get_current_user_required
 from app.core.templates import templates
 
 router = APIRouter(prefix="/customers", tags=["customers"], dependencies=[Depends(require_admin)])
