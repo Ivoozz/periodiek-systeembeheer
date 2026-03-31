@@ -12,3 +12,4 @@ pysqlite3-binary
 python-docx
 openpyxl
 python-dotenv
+itsdangerous
