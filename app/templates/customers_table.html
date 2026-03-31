@@ -1,0 +1,18 @@
+{% for customer in customers %}
+<tr class="hover:bg-slate-700/30 transition-colors text-slate-300">
+    <td class="px-6 py-4 font-medium text-white">{{ customer.name }}</td>
+    <td class="px-6 py-4 text-sm">{{ customer.location or '-' }}</td>
+    <td class="px-6 py-4 text-sm">{{ customer.contact_person or '-' }}</td>
+    <td class="px-6 py-4 text-right space-x-2">
+        <button class="text-slate-400 hover:text-sky-500 transition-colors" title="Bewerken">
+            <i class="fas fa-edit"></i>
+        </button>
+        <button hx-delete="/customers/{{ customer.id }}" 
+                hx-target="#customer-table" 
+                hx-confirm="Weet u zeker dat u {{ customer.name }} wilt verwijderen?"
+                class="text-slate-400 hover:text-red-500 transition-colors" title="Verwijderen">
+            <i class="fas fa-trash-alt"></i>
+        </button>
+    </td>
+</tr>
+{% endfor %}

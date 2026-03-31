@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Periodiek Systeembeheer{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-center min-h-screen">
+    <div class="w-full max-w-md p-8 space-y-6 bg-slate-800 rounded-lg shadow-xl border border-slate-700">
+        <div class="text-center">
+            <h1 class="text-3xl font-bold text-sky-500">Periodiek Systeembeheer</h1>
+            <p class="mt-2 text-slate-400">Log in om uw dashboard te bekijken</p>
+        </div>
+
+        {% if error %}
+        <div class="p-3 text-sm text-red-400 bg-red-900/30 border border-red-800 rounded">
+            Ongeldige gebruikersnaam of wachtwoord.
+        </div>
+        {% endif %}
+
+        <form action="/login" method="POST" class="space-y-4">
+            <div>
+                <label for="username" class="block text-sm font-medium text-slate-300">Gebruikersnaam</label>
+                <input type="text" name="username" id="username" required
+                    class="w-full px-4 py-2 mt-1 bg-slate-900 border border-slate-700 rounded focus:outline-none focus:ring-2 focus:ring-sky-500 text-slate-100">
+            </div>
+            <div>
+                <label for="password" class="block text-sm font-medium text-slate-300">Wachtwoord</label>
+                <input type="password" name="password" id="password" required
+                    class="w-full px-4 py-2 mt-1 bg-slate-900 border border-slate-700 rounded focus:outline-none focus:ring-2 focus:ring-sky-500 text-slate-100">
+            </div>
+            <div>
+                <button type="submit"
+                    class="w-full px-4 py-2 font-bold text-white bg-sky-500 rounded hover:bg-sky-600 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-offset-2 focus:ring-offset-slate-800 transition-colors duration-200">
+                    Inloggen
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

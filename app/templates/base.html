@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="nl" class="h-full bg-slate-950">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Periodiek Systeembeheer{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        slate: {
+                            950: '#020617',
+                            900: '#0f172a',
+                            800: '#1e293b',
+                            700: '#334155',
+                        },
+                        sky: {
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer components {
+            .card { @apply bg-slate-900 border border-slate-800 rounded-xl shadow-xl overflow-hidden; }
+            .btn-primary { @apply bg-sky-500 hover:bg-sky-600 text-slate-950 font-bold py-2 px-4 rounded-lg transition-all duration-200 transform active:scale-[0.98] disabled:opacity-50; }
+            .form-input { @apply w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all; }
+            .form-label { @apply block text-sm font-semibold text-slate-400 mb-1.5; }
+        }
+    </style>
+    {% block head %}{% endblock %}
+</head>
+<body class="h-full bg-slate-950 text-slate-200 antialiased">
+    <div class="min-h-full flex flex-col">
+        <!-- Navbar -->
+        <nav class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16 items-center">
+                    <div class="flex items-center space-x-3">
+                        <a href="/dashboard" class="flex items-center space-x-3">
+                            <div class="bg-sky-500 p-1.5 rounded-lg text-slate-950">
+                                <i class="fas fa-server text-xl"></i>
+                            </div>
+                            <span class="text-xl font-bold tracking-tight text-white">Systeembeheer</span>
+                        </a>
+                    </div>
+                    
+                    <div class="flex items-center space-x-6">
+                        {% if user %}
+                            <a href="/dashboard" class="text-sm font-medium {% if request.path == '/dashboard' %}text-sky-500{% else %}text-slate-400 hover:text-white{% endif %} transition-colors">Dashboard</a>
+                            <a href="/customers" class="text-sm font-medium {% if request.path.startswith('/customers') %}text-sky-500{% else %}text-slate-400 hover:text-white{% endif %} transition-colors">Klanten</a>
+                            <form action="/logout" method="POST" class="inline">
+                                <button type="submit" class="text-sm font-bold text-slate-400 hover:text-red-400 transition-colors">
+                                    <i class="fas fa-sign-out-alt mr-1"></i> Uitloggen
+                                </button>
+                            </form>
+                        {% elif request.path != '/login' %}
+                            <a href="/login" class="btn-primary py-1.5 text-sm">Inloggen</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="flex-grow">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-slate-950 border-t border-slate-900 py-8 mt-auto">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center">
+                    <p class="text-slate-500 text-sm">&copy; 2026 Systeembeheer Rebuild v3.5</p>
+                    <div class="flex space-x-6 text-slate-500 text-sm">
+                        <span class="flex items-center"><i class="fas fa-shield-halved mr-2 text-sky-500/50"></i> Beveiligd</span>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

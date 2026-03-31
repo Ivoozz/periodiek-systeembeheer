@@ -65,6 +65,9 @@ class Report(Base):
     technician_id = Column(Integer, ForeignKey("users.id"))
     date_performed = Column(DateTime, default=datetime.datetime.utcnow)
     status = Column(Enum(ReportStatus), default=ReportStatus.CONCEPT)
+    
+    customer = relationship("Customer")
+    technician = relationship("User")
     items = relationship("ReportItem", back_populates="report", cascade="all, delete-orphan")
 
 class ReportItem(Base):
@@ -74,4 +77,6 @@ class ReportItem(Base):
     checkpoint_id = Column(Integer, ForeignKey("checkpoints.id"))
     result = Column(Enum(ResultStatus), default=ResultStatus.NVT)
     comment = Column(Text)
+    
     report = relationship("Report", back_populates="items")
+    checkpoint = relationship("Checkpoint")
