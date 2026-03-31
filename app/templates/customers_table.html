@@ -1,52 +1,71 @@
 {% for customer in customers %}
-<tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors text-slate-600 dark:text-slate-300 group border-b border-slate-100 dark:border-slate-800 last:border-0 md:border-b">
-    <td class="px-8 py-6" data-label="Naam">
-        <div class="flex items-center gap-4">
-            <div class="w-10 h-10 rounded-xl bg-brand-primary/10 flex items-center justify-center text-brand-primary font-black group-hover:scale-110 transition-transform flex-shrink-0 shadow-inner">
+<tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors text-slate-600 dark:text-slate-300 group border-b border-slate-100 dark:border-slate-800 md:border-none">
+    <td class="px-8 py-5" data-label="Naam">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-brand-primary/10 flex items-center justify-center text-brand-primary font-bold group-hover:scale-110 transition-transform flex-shrink-0">
                 {{ customer.name[0].upper() }}
             </div>
-            <span class="font-black text-slate-900 dark:text-white truncate text-base">{{ customer.name }}</span>
+            <div>
+                <span class="font-bold text-slate-900 dark:text-white block">{{ customer.name }}</span>
+                <span class="text-[10px] text-slate-400 uppercase tracking-widest font-black">ID: #{{ customer.id }}</span>
+            </div>
         </div>
     </td>
-    <td class="px-8 py-6 text-sm font-semibold" data-label="Locatie">
-        <div class="flex items-center gap-2 text-slate-500 dark:text-slate-400">
-            <i class="fas fa-map-pin text-[10px] opacity-50"></i>
+    <td class="px-8 py-5 text-sm font-medium" data-label="Locatie">
+        <div class="flex items-center gap-2">
+            <i class="fas fa-location-dot text-slate-300"></i>
             <span class="truncate">{{ customer.location or '-' }}</span>
         </div>
     </td>
-    <td class="px-8 py-6 text-sm" data-label="Contact">
-        <div class="space-y-1.5">
-            <div class="flex items-center gap-2.5">
-                <div class="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                    <i class="fas fa-user text-[9px] text-slate-400"></i>
-                </div>
-                <span class="font-bold text-slate-700 dark:text-slate-200 truncate">{{ customer.contact_name or customer.contact_person or '-' }}</span>
+    <td class="px-8 py-5 text-sm font-medium" data-label="Contact">
+        <div class="space-y-1">
+            <div class="flex items-center gap-2">
+                <i class="fas fa-user text-[10px] text-slate-400"></i>
+                <span class="truncate">{{ customer.contact_name or customer.contact_person or '-' }}</span>
             </div>
             {% if customer.contact_phone %}
-            <a href="tel:{{ customer.contact_phone }}" class="inline-flex items-center gap-2.5 px-2 py-1 rounded-lg bg-brand-primary/5 text-[11px] font-black text-brand-primary hover:bg-brand-primary/10 transition-colors">
+            <a href="tel:{{ customer.contact_phone }}" class="flex items-center gap-2 text-xs text-brand-primary font-bold hover:underline">
                 <i class="fas fa-phone text-[9px]"></i>
                 {{ customer.contact_phone }}
             </a>
             {% endif %}
         </div>
     </td>
-    <td class="px-8 py-6 text-right" data-label="Acties">
-        <div class="flex items-center justify-end gap-2.5">
-            <button @click="editContactModalOpen = true; editCustomerId = {{ customer.id }}; editContactName = '{{ customer.contact_name or customer.contact_person or '' }}'; editContactPhone = '{{ customer.contact_phone or '' }}'"
-                    class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 text-slate-400 hover:bg-brand-primary hover:text-white transition-all shadow-sm" title="Contact">
-                <i class="fas fa-address-book text-sm"></i>
+    <td class="px-8 py-5 text-right" data-label="Acties">
+        <!-- Unified Action Dots Menu -->
+        <div x-data="{ open: false }" class="relative inline-block text-left">
+            <button @click="open = !open" @click.away="open = false" 
+                    class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 transition-all">
+                <i class="fas fa-ellipsis-v"></i>
             </button>
-            <button class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 text-slate-400 hover:bg-sky-500 hover:text-white transition-all shadow-sm" title="Bewerken">
-                <i class="fas fa-edit text-sm"></i>
-            </button>
-            {% if user.role.value == 'Admin' %}
-            <button hx-delete="/customers/{{ customer.id }}" 
-                    hx-target="#customer-table" 
-                    hx-confirm="Weet u zeker dat u {{ customer.name }} wilt verwijderen?"
-                    class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 text-slate-400 hover:bg-red-500 hover:text-white transition-all shadow-sm" title="Verwijderen">
-                <i class="fas fa-trash-alt text-sm"></i>
-            </button>
-            {% endif %}
+            
+            <div x-show="open" 
+                 x-transition:enter="transition ease-out duration-100"
+                 x-transition:enter-start="opacity-0 scale-95"
+                 x-transition:enter-end="opacity-100 scale-100"
+                 class="absolute right-0 mt-2 w-48 glass-card shadow-2xl z-50 overflow-hidden p-1.5 ring-1 ring-black/5"
+                 x-cloak>
+                
+                <button @click="editContactModalOpen = true; editCustomerId = {{ customer.id }}; editContactName = '{{ customer.contact_name or customer.contact_person or '' }}'; editContactPhone = '{{ customer.contact_phone or '' }}'; open = false"
+                        class="w-full px-3 py-2 text-left text-sm rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-3 transition-colors text-slate-600 dark:text-slate-300">
+                    <i class="fas fa-address-book w-4 text-brand-primary"></i> Contact Beheren
+                </button>
+                
+                <button class="w-full px-3 py-2 text-left text-sm rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-3 transition-colors text-slate-600 dark:text-slate-300">
+                    <i class="fas fa-edit w-4 text-sky-500"></i> Klant Wijzigen
+                </button>
+
+                <div class="h-px bg-slate-100 dark:bg-slate-800 my-1"></div>
+                
+                {% if user.role.value == 'Admin' %}
+                <button hx-delete="/customers/{{ customer.id }}" 
+                        hx-target="#customer-table" 
+                        hx-confirm="Weet u zeker dat u {{ customer.name }} wilt verwijderen?"
+                        class="w-full px-3 py-2 text-left text-sm rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 flex items-center gap-3 transition-colors text-red-500">
+                    <i class="fas fa-trash-alt w-4"></i> Verwijderen
+                </button>
+                {% endif %}
+            </div>
         </div>
     </td>
 </tr>

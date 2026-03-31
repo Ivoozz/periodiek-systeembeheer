@@ -10,7 +10,7 @@ import os
 
 from app.db.database import engine, Base, get_db
 from app.db import models
-from app.routers import auth, dashboard, customers, reports, api, technician, planning, settings
+from app.routers import auth, dashboard, customers, reports, api, technician, planning, settings, profile
 from app.core import branding
 from app.core.templates import templates
 from app.core.auth import get_current_user
@@ -86,6 +86,7 @@ app.include_router(api.router)
 app.include_router(technician.router)
 app.include_router(planning.router)
 app.include_router(settings.router)
+app.include_router(profile.router)
 
 @app.get("/")
 async def root(request: Request, user: models.User = Depends(get_current_user)):

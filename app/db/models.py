@@ -36,6 +36,7 @@ class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True, nullable=False)
+    display_name = Column(String, nullable=True)
     password_hash = Column(String, nullable=False)
     role = Column(Enum(Role), default=Role.TECHNICUS)
     is_active = Column(Boolean, default=True)
@@ -113,3 +114,15 @@ class ReportItem(Base):
     
     report = relationship("Report", back_populates="items")
     checkpoint = relationship("Checkpoint")
+
+class AuditLog(Base):
+    __tablename__ = "audit_logs"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    action = Column(String, nullable=False) # e.g., "CREATE", "UPDATE", "DELETE"
+    target_type = Column(String, nullable=False) # e.g., "Customer", "User"
+    target_id = Column(Integer, nullable=False)
+    details = Column(Text, nullable=True) # JSON or descriptive text
+    timestamp = Column(DateTime(timezone=True), server_default=func.now())
+
+    user = relationship("User")

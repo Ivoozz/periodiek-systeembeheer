@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Request, Depends, Form, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 from typing import Annotated, Optional
 
 from app.db.database import get_db
-from app.db.models import Customer, User
+from app.db.models import Customer, User, AuditLog, Role
 from app.core.auth import require_admin
 from app.core.auth import get_current_user_required
 from app.core.templates import templates
@@ -16,26 +16,54 @@ async def list_customers(
     request: Request,
     db: Session = Depends(get_db),
     user: User = Depends(require_admin),
-    search: Optional[str] = None
+    search: Optional[str] = None,
+    location: Optional[str] = None,
+    contact: Optional[str] = None
 ):
     query = db.query(Customer)
     if search:
         query = query.filter(Customer.name.contains(search))
+    if location:
+        query = query.filter(Customer.location.contains(location))
+    if contact:
+        query = query.filter(Customer.contact_person.contains(contact))
+        
     customers = query.order_by(Customer.name).all()
+    
+    # Get distinct locations and contact persons for filtering
+    locations = [r[0] for r in db.query(Customer.location).distinct().all() if r[0]]
+    contacts = [r[0] for r in db.query(Customer.contact_person).distinct().all() if r[0]]
+    
     return templates.TemplateResponse(
         "customers.html",
-        {"request": request, "customers": customers, "user": user, "search": search}
+        {
+            "request": request, 
+            "customers": customers, 
+            "user": user, 
+            "search": search,
+            "locations": locations,
+            "contacts": contacts,
+            "current_location": location,
+            "current_contact": contact
+        }
     )
 
 @router.get("/table", response_class=HTMLResponse)
 async def get_customers_table(
     request: Request,
     db: Session = Depends(get_db),
-    search: Optional[str] = None
+    search: Optional[str] = None,
+    location: Optional[str] = None,
+    contact: Optional[str] = None
 ):
     query = db.query(Customer)
     if search:
         query = query.filter(Customer.name.contains(search))
+    if location:
+        query = query.filter(Customer.location.contains(location))
+    if contact:
+        query = query.filter(Customer.contact_person.contains(contact))
+        
     customers = query.order_by(Customer.name).all()
     return templates.TemplateResponse(
         "customers_table.html",
@@ -58,6 +86,16 @@ async def create_customer(
     db.add(new_customer)
     db.commit()
     db.refresh(new_customer)
+    
+    # Audit Log
+    db.add(AuditLog(
+        user_id=user.id,
+        action="CREATE",
+        target_type="Customer",
+        target_id=new_customer.id,
+        details=f"Klant '{name}' aangemaakt."
+    ))
+    db.commit()
     
     customers = db.query(Customer).order_by(Customer.name).all()
     return templates.TemplateResponse(

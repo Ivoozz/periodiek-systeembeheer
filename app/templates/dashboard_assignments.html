@@ -1,0 +1,43 @@
+{% for assignment in upcoming_assignments %}
+<div class="flex items-center gap-4 p-4 rounded-2xl border transition-all group
+    {% if assignment.scheduled_date < now %}
+        border-red-500/30 bg-red-500/5
+    {% elif assignment.scheduled_date < (now + timedelta(days=2)) %}
+        border-amber-500/30 bg-amber-500/5
+    {% else %}
+        border-slate-100 dark:border-slate-800 hover:border-brand-primary/30
+    {% endif %}">
+    <div class="w-12 h-12 rounded-xl flex flex-col items-center justify-center
+        {% if assignment.scheduled_date < now %}
+            bg-red-500/10 text-red-500
+        {% elif assignment.scheduled_date < (now + timedelta(days=2)) %}
+            bg-amber-500/10 text-amber-500
+        {% else %}
+            bg-brand-primary/10 text-brand-primary
+        {% endif %}">
+        <span class="text-[10px] font-black uppercase">{{ assignment.scheduled_date.strftime('%b') }}</span>
+        <span class="text-lg font-black leading-none">{{ assignment.scheduled_date.strftime('%d') }}</span>
+    </div>
+    <div class="flex-grow">
+        <p class="font-bold text-slate-900 dark:text-white">{{ assignment.customer.name }}</p>
+        <p class="text-xs text-slate-500">{{ assignment.scheduled_date.strftime('%Y') }} • {{ assignment.technician.username }}</p>
+    </div>
+    <div class="text-right">
+        {% if assignment.scheduled_date < now %}
+            <span class="px-2 py-1 rounded-md bg-red-500 text-[9px] font-black uppercase text-white animate-pulse">
+                Overdue
+            </span>
+        {% elif assignment.scheduled_date < (now + timedelta(days=2)) %}
+            <span class="px-2 py-1 rounded-md bg-amber-500 text-[9px] font-black uppercase text-white">
+                Urgent
+            </span>
+        {% else %}
+            <span class="px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-[9px] font-black uppercase text-slate-500">
+                Gepland
+            </span>
+        {% endif %}
+    </div>
+</div>
+{% else %}
+<div class="text-center py-8 text-slate-500 italic text-sm">Geen onderhoud gepland.</div>
+{% endfor %}

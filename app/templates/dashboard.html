@@ -78,37 +78,38 @@
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <!-- Upcoming Assignments -->
+        <!-- Maintenance Volume Chart -->
+        <div class="glass-card overflow-hidden">
+            <div class="px-8 py-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/30">
+                <h2 class="text-lg font-black text-slate-900 dark:text-white flex items-center gap-3">
+                    <i class="fas fa-chart-line text-brand-primary"></i>
+                    Onderhoudsvolume
+                </h2>
+            </div>
+            <div class="p-6">
+                <canvas id="maintenanceChart" height="200"></canvas>
+            </div>
+        </div>
+
+        <!-- Upcoming Assignments (HTMX Polling) -->
         <div class="glass-card overflow-hidden">
             <div class="px-8 py-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/30">
                 <h2 class="text-lg font-black text-slate-900 dark:text-white flex items-center gap-3">
                     <i class="fas fa-calendar-check text-brand-primary"></i>
                     Aankomend Onderhoud
                 </h2>
+                <div class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></div>
             </div>
-            <div class="p-6 space-y-4">
-                {% for assignment in upcoming_assignments %}
-                <div class="flex items-center gap-4 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 hover:border-brand-primary/30 transition-all group">
-                    <div class="w-12 h-12 rounded-xl bg-brand-primary/10 flex flex-col items-center justify-center text-brand-primary">
-                        <span class="text-[10px] font-black uppercase">{{ assignment.scheduled_date.strftime('%b') }}</span>
-                        <span class="text-lg font-black leading-none">{{ assignment.scheduled_date.strftime('%d') }}</span>
-                    </div>
-                    <div class="flex-grow">
-                        <p class="font-bold text-slate-900 dark:text-white">{{ assignment.customer.name }}</p>
-                        <p class="text-xs text-slate-500">{{ assignment.scheduled_date.strftime('%Y') }} • {{ assignment.technician.username }}</p>
-                    </div>
-                    <div class="text-right">
-                        <span class="px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-[9px] font-black uppercase text-slate-500">
-                            Gepland
-                        </span>
-                    </div>
-                </div>
-                {% else %}
-                <div class="text-center py-8 text-slate-500 italic text-sm">Geen onderhoud gepland.</div>
-                {% endfor %}
+            <div id="upcoming-assignments-list" 
+                 hx-get="/dashboard/assignments" 
+                 hx-trigger="every 60s" 
+                 class="p-6 space-y-4">
+                {% include "dashboard_assignments.html" %}
             </div>
         </div>
+    </div>
 
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
         <!-- Recent Reports -->
         <div class="glass-card overflow-hidden">
             <div class="px-8 py-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/30">
@@ -137,4 +138,46 @@
     </div>
     {% endif %}
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('maintenanceChart');
+    if (ctx) {
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: {{ maintenance_labels | tojson }},
+                datasets: [{
+                    label: 'Onderhoudsvolume',
+                    data: {{ maintenance_data | tojson }},
+                    borderColor: '{{ branding.primary_color or "#0ea5e9" }}',
+                    backgroundColor: '{{ (branding.primary_color or "#0ea5e9") }}20',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointBackgroundColor: '{{ branding.primary_color or "#0ea5e9" }}'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(0,0,0,0.05)' },
+                        ticks: { stepSize: 1 }
+                    },
+                    x: {
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
 {% endblock %}
