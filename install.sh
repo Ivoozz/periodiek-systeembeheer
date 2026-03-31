@@ -13,7 +13,7 @@ echo ">>> Systeembeheer v4.0 'Ultra Visual' Installatie Start..."
 # 1. Voorbereiding
 echo ">>> Systeem pakketten bijwerken..."
 sudo apt-get update
-sudo apt-get install -y python3 python3-pip python3-venv nginx libsqlcipher-dev openssl sqlite3 curl wget
+sudo apt-get install -y python3 python3-pip python3-venv nginx libsqlcipher-dev openssl sqlite3 curl wget rsync
 
 # 2. Mapstructuur
 echo ">>> Bestandsstructuur inrichten..."
