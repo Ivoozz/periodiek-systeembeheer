@@ -71,24 +71,28 @@
             <div class="card">
                 <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/50">
                     <h3 class="font-bold text-white">Recente Rapportages</h3>
-                    <a href="#" class="text-sky-500 text-sm font-semibold hover:underline">Bekijk alles</a>
+                    <a href="/api/reports/history/0" class="text-sky-500 text-sm font-semibold hover:underline">Bekijk alles</a>
                 </div>
                 <div class="divide-y divide-slate-800">
-                    {% for i in range(3) %}
+                    {% for report in recent_reports %}
                     <div class="p-6 flex items-center justify-between hover:bg-slate-800/30 transition-colors">
                         <div class="flex items-center space-x-4">
                             <div class="h-10 w-10 bg-slate-800 rounded-full flex items-center justify-center border border-slate-700 text-slate-400">
                                 <i class="fas fa-file-invoice"></i>
                             </div>
                             <div>
-                                <p class="text-white font-medium">Onderhoudsrapport #{{ 202400 + i }}</p>
-                                <p class="text-slate-500 text-sm">Klant: Demo BV • 31 Maart 2026</p>
+                                <p class="text-white font-medium">Onderhoudsrapport #{{ report.id }}</p>
+                                <p class="text-slate-500 text-sm">Klant ID: {{ report.customer_id }} • {{ report.datum_uitvoering.strftime('%d-%m-%Y') }}</p>
                             </div>
                         </div>
                         <div class="flex items-center space-x-3">
-                            <span class="px-2 py-1 bg-emerald-500/10 text-emerald-500 text-xs font-bold rounded border border-emerald-500/20 uppercase">OK</span>
-                            <button class="text-slate-400 hover:text-white"><i class="fas fa-chevron-right"></i></button>
+                            <a href="/api/reports/{{ report.id }}" class="text-slate-400 hover:text-white"><i class="fas fa-chevron-right"></i></a>
                         </div>
+                    </div>
+                    {% else %}
+                    <div class="p-12 text-center">
+                        <i class="fas fa-folder-open text-slate-700 text-4xl mb-4 block"></i>
+                        <p class="text-slate-500">Nog geen rapportages gevonden.</p>
                     </div>
                     {% endfor %}
                 </div>
@@ -100,14 +104,14 @@
             <div class="card p-6">
                 <h3 class="font-bold text-white mb-4">Snelmenu</h3>
                 <div class="grid grid-cols-2 gap-3">
-                    <button class="flex flex-col items-center justify-center p-4 bg-slate-800/50 hover:bg-slate-800 rounded-lg border border-slate-700 transition-all group">
-                        <i class="fas fa-user-plus text-sky-500 mb-2 group-hover:scale-110 transition-transform"></i>
-                        <span class="text-xs font-medium text-slate-300">Klant+</span>
-                    </button>
-                    <button class="flex flex-col items-center justify-center p-4 bg-slate-800/50 hover:bg-slate-800 rounded-lg border border-slate-700 transition-all group">
+                    <a href="/api/customers" class="flex flex-col items-center justify-center p-4 bg-slate-800/50 hover:bg-slate-800 rounded-lg border border-slate-700 transition-all group">
+                        <i class="fas fa-user-group text-sky-500 mb-2 group-hover:scale-110 transition-transform"></i>
+                        <span class="text-xs font-medium text-slate-300">Klanten</span>
+                    </a>
+                    <a href="/admin/instellingen" class="flex flex-col items-center justify-center p-4 bg-slate-800/50 hover:bg-slate-800 rounded-lg border border-slate-700 transition-all group">
                         <i class="fas fa-gear text-slate-400 mb-2 group-hover:rotate-90 transition-transform duration-500"></i>
                         <span class="text-xs font-medium text-slate-300">Instellingen</span>
-                    </button>
+                    </a>
                     <button class="flex flex-col items-center justify-center p-4 bg-slate-800/50 hover:bg-slate-800 rounded-lg border border-slate-700 transition-all group">
                         <i class="fas fa-cloud-arrow-down text-emerald-500 mb-2 group-hover:-translate-y-1 transition-transform"></i>
                         <span class="text-xs font-medium text-slate-300">Backup</span>

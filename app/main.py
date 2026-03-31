@@ -9,7 +9,7 @@ import logging
 import hashlib
 
 from app.db.session import engine, Base, get_db
-from app.models import SystemSettings, User
+from app.models import SystemSettings, User, Report
 from app.routers import users, reports, settings, customers, auth
 from app.core.auth import get_current_user, require_behandelaar
 from app.api.v1 import external
@@ -108,7 +108,25 @@ async def login_page(request: Request, db: Session = Depends(get_db)):
 @app.get("/dashboard")
 async def dashboard_page(request: Request, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     settings = get_system_settings(db)
-    return templates.TemplateResponse("admin/dashboard.html", {"request": request, "settings": settings, "user": current_user})
+    
+    # Haal echte statistieken op
+    stats = {
+        "active_customers": db.query(User).filter(User.role == "Klant").count(),
+        "pending_reports": 0,
+        "completed_checks": db.query(Report).count(),
+        "system_health": "100%"
+    }
+    
+    # Haal laatste 5 rapportages op
+    recent_reports = db.query(Report).order_by(Report.created_at.desc()).limit(5).all()
+    
+    return templates.TemplateResponse("admin/dashboard.html", {
+        "request": request, 
+        "settings": settings, 
+        "user": current_user,
+        "stats": stats,
+        "recent_reports": recent_reports
+    })
 
 @app.get("/admin/instellingen")
 async def settings_page(request: Request, db: Session = Depends(get_db), current_user: User = Depends(require_behandelaar)):
