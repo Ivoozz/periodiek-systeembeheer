@@ -39,11 +39,21 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
 async def get_current_user(request: Request, db: Session = Depends(get_db)):
     # Check eerst de cookie voor de frontend, anders de Authorization header
     token = request.cookies.get("access_token")
+    
+    # DEBUG LOGGING
+    import logging
+    logger = logging.getLogger("app.auth")
+    if token:
+        logger.info(f"Token gevonden in cookie: {token[:20]}...")
+    else:
+        logger.warning("Geen token gevonden in cookies")
+
     if not token:
         # Check Authorization header (voor API's)
         auth_header = request.headers.get("Authorization")
         if auth_header and auth_header.startswith("Bearer "):
             token = auth_header.split(" ")[1]
+            logger.info("Token gevonden in Authorization header")
     
     # Strip "Bearer " if it comes from the cookie
     if token and token.startswith("Bearer "):
