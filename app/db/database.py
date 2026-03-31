@@ -1,7 +1,7 @@
 import os
-from sqlalchemy import create_engine, event
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
-from sqlalchemy.pool import StaticPool
+from sqlalchemy.pool import QueuePool
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -18,23 +18,23 @@ os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
 import pysqlite3
 
 def get_connection():
-    # Persistent connection for StaticPool to avoid re-opening/decrypting on every request
+    # Production-ready connection with SQLCipher key
     conn = pysqlite3.connect(DB_PATH, check_same_thread=False)
     conn.execute(f"PRAGMA key = '{DATABASE_KEY}'")
-    # PERFORMANCE: Optimize SQLite for LXC
-    conn.execute("PRAGMA journal_mode=WAL") # Use WAL for better concurrency
+    # PERFORMANCE: Enable WAL for better concurrency in multi-user SaaS
+    conn.execute("PRAGMA journal_mode=WAL")
     conn.execute("PRAGMA synchronous=NORMAL")
-    conn.execute("PRAGMA cache_size=-64000") # 64MB Cache
-    conn.execute("PRAGMA temp_store=MEMORY")
+    conn.execute("PRAGMA cache_size=-64000") 
     return conn
 
-# PERFORMANCE: Use a small pool to balance decryption overhead and concurrency
+# PERFORMANCE: Use QueuePool for robust concurrent access
 engine = create_engine(
     "sqlite://", 
     creator=get_connection,
-    connect_args={"check_same_thread": False},
+    poolclass=QueuePool,
     pool_size=5,
-    max_overflow=10
+    max_overflow=10,
+    connect_args={"check_same_thread": False}
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
