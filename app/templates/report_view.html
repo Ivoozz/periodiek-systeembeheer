@@ -3,71 +3,97 @@
 {% block title %}Rapport - {{ report.customer.name }} - {{ report.date_performed.strftime('%d-%m-%Y') }}{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto">
-    <div class="bg-white shadow rounded-lg overflow-hidden mb-8">
-        <div class="bg-gray-800 px-6 py-4 flex flex-col md:flex-row md:items-center justify-between text-white">
-            <div>
-                <h1 class="text-2xl font-bold">Inspectie Rapport</h1>
-                <p class="opacity-80">{{ report.customer.name }} - {{ report.date_performed.strftime('%d-%m-%Y %H:%M') }}</p>
-            </div>
-            <div class="mt-4 md:mt-0 flex gap-4">
-                <a href="/reports/{{ report.id }}/export" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-md transition-colors shadow flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
-                    </svg>
-                    Word Export
-                </a>
-                <a href="/dashboard" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-md transition-colors shadow">
-                    Terug
-                </a>
+<div class="space-y-8 animate-in fade-in duration-500">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+        <div>
+            <h1 class="text-3xl font-bold text-white tracking-tight">Inspectie Rapport</h1>
+            <p class="text-slate-400 mt-1">{{ report.customer.name }} &bull; {{ report.date_performed.strftime('%d-%m-%Y %H:%M') }}</p>
+        </div>
+        <div class="flex items-center space-x-3">
+            <a href="/reports/{{ report.id }}/export" class="btn-primary flex items-center">
+                <i class="fas fa-file-word mr-2 text-sm"></i> Word Export
+            </a>
+            <a href="/dashboard" class="px-4 py-2 text-slate-400 hover:text-white font-medium transition-colors">
+                Terug naar Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="card p-6 bg-slate-900/80">
+            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Klantgegevens</h3>
+            <div class="space-y-1">
+                <p class="text-xl font-bold text-white">{{ report.customer.name }}</p>
+                <p class="text-slate-400 flex items-center">
+                    <i class="fas fa-map-marker-alt mr-2 text-sky-500/50"></i>
+                    {{ report.customer.location or 'Geen locatie bekend' }}
+                </p>
             </div>
         </div>
         
-        <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 border-b">
-            <div>
-                <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Klantgegevens</h3>
-                <p class="text-lg font-medium">{{ report.customer.name }}</p>
-                <p class="text-gray-600">{{ report.customer.location or 'Geen locatie bekend' }}</p>
-            </div>
-            <div>
-                <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Technicus</h3>
-                <p class="text-lg font-medium">{{ report.technician.username }}</p>
-                <p class="text-gray-600">Status: <span class="px-2 py-0.5 rounded text-xs {{ 'bg-green-100 text-green-800' if report.status.value == 'Final' else 'bg-yellow-100 text-yellow-800' }}">{{ report.status.value }}</span></p>
+        <div class="card p-6 bg-slate-900/80">
+            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Details</h3>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <p class="text-sm text-slate-500">Technicus</p>
+                    <p class="text-white font-medium">{{ report.technician.username }}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-slate-500">Status</p>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider mt-1
+                        {% if report.status.value == 'Final' %}bg-emerald-500/10 text-emerald-500 border border-emerald-500/20
+                        {% else %}bg-amber-500/10 text-amber-500 border border-amber-500/20{% endif %}">
+                        {{ report.status.value }}
+                    </span>
+                </div>
             </div>
         </div>
+    </div>
 
-        <div class="p-0 overflow-x-auto">
+    <!-- Results Table -->
+    <div class="card bg-slate-900/50 overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-800 bg-slate-900/80">
+            <h2 class="text-lg font-bold text-white">Checklist Resultaten</h2>
+        </div>
+        <div class="overflow-x-auto">
             <table class="w-full text-left">
-                <thead class="bg-gray-50 text-gray-700 uppercase text-xs font-semibold">
-                    <tr>
-                        <th class="px-6 py-3">Checkpoint</th>
-                        <th class="px-6 py-3">Resultaat</th>
-                        <th class="px-6 py-3">Opmerking</th>
+                <thead>
+                    <tr class="text-slate-400 border-b border-slate-800 bg-slate-900/30">
+                        <th class="px-6 py-3 font-semibold uppercase text-xs">Checkpoint</th>
+                        <th class="px-6 py-3 font-semibold uppercase text-xs">Resultaat</th>
+                        <th class="px-6 py-3 font-semibold uppercase text-xs">Opmerking</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-200">
+                <tbody class="divide-y divide-slate-800">
                     {% for item in report.items %}
-                    <tr>
+                    <tr class="hover:bg-slate-800/30 transition-colors">
                         <td class="px-6 py-4">
-                            <p class="font-medium text-gray-800">{{ item.checkpoint.name }}</p>
+                            <p class="font-medium text-white">{{ item.checkpoint.name }}</p>
                             {% if item.checkpoint.category %}
-                            <p class="text-xs text-gray-500">{{ item.checkpoint.category.name }}</p>
+                            <p class="text-xs text-slate-500 mt-0.5 uppercase tracking-tighter">{{ item.checkpoint.category.name }}</p>
                             {% endif %}
                         </td>
                         <td class="px-6 py-4">
-                            <span class="px-2.5 py-1 rounded-full text-xs font-bold
-                                {{ 'bg-green-100 text-green-800' if item.result.value == 'OK' }}
-                                {{ 'bg-red-100 text-red-800' if item.result.value == 'NOK' }}
-                                {{ 'bg-gray-100 text-gray-800' if item.result.value == 'NVT' }}
+                            <span class="inline-flex items-center px-2.5 py-1 rounded text-xs font-black uppercase tracking-widest
+                                {% if item.result.value == 'OK' %}bg-emerald-500/10 text-emerald-500 border border-emerald-500/20
+                                {% elif item.result.value == 'NOK' %}bg-red-500/10 text-red-500 border border-red-500/20
+                                {% else %}bg-slate-700/30 text-slate-500 border border-slate-700/30{% endif %}
                             ">
                                 {{ item.result.value }}
                             </span>
                         </td>
-                        <td class="px-6 py-4 text-sm text-gray-600 italic">
+                        <td class="px-6 py-4 text-sm text-slate-400 italic">
                             {{ item.comment or '-' }}
                         </td>
                     </tr>
                     {% endfor %}
+                    {% if not report.items %}
+                    <tr>
+                        <td colspan="3" class="px-6 py-12 text-center text-slate-500 italic">
+                            Geen resultaten gevonden voor dit rapport.
+                        </td>
+                    </tr>
+                    {% endif %}
                 </tbody>
             </table>
         </div>

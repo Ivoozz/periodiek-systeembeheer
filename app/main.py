@@ -5,7 +5,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
 from app.db.database import engine, Base
 from app.db import models
-from app.routers import auth, dashboard, customers, reports
+from app.routers import auth, dashboard, customers, reports, api
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -21,7 +21,6 @@ app = FastAPI(
 )
 
 # Static files mounten
-# Check if app/static exists
 import os
 os.makedirs("app/static", exist_ok=True)
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
@@ -31,6 +30,7 @@ app.include_router(dashboard.router)
 app.include_router(auth.router)
 app.include_router(customers.router)
 app.include_router(reports.router)
+app.include_router(api.router)
 
 @app.get("/")
 async def root(request: Request):
