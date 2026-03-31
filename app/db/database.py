@@ -23,7 +23,7 @@ def get_connection():
     return conn
 
 engine = create_engine(
-    DATABASE_URL, 
+    "sqlite://", 
     creator=get_connection,
     connect_args={"check_same_thread": False}
 )
