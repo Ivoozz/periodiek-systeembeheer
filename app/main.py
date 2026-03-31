@@ -2,6 +2,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, HTTPException, status, Depends
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse, HTMLResponse
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from starlette.middleware.proxy_headers import ProxyHeadersMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from sqlalchemy.orm import Session
 import os
@@ -22,39 +24,26 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Periodiek Systeembeheer",
     description="Modern monolith for periodic system maintenance reports",
-    version="4.5",
+    version="4.5.1",
     lifespan=lifespan
 )
 
+# CLOUDFLARE / REVERSE PROXY SUPPORT
+# Trust proxy headers (X-Forwarded-For, X-Forwarded-Proto)
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
+
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
-    # If 401 Unauthorized, redirect to login
     if exc.status_code == status.HTTP_401_UNAUTHORIZED:
-        # Check if HTMX request
         if request.headers.get("HX-Request"):
             response = HTMLResponse("")
             response.headers["HX-Redirect"] = "/login"
             return response
         return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
     
-    # Get database for branding if possible
     db = next(get_db())
     brand_settings = branding.get_branding_settings(db)
 
-    # If 403 Forbidden, show a nice access denied page
-    if exc.status_code == status.HTTP_403_FORBIDDEN:
-        return templates.TemplateResponse(
-            "error.html", 
-            {
-                "request": request, 
-                "status_code": 403, 
-                "message": exc.detail or "Toegang Geweigerd",
-                "branding": brand_settings
-            }, 
-            status_code=403
-        )
-    
-    # For other errors (like 404), show error page
     return templates.TemplateResponse(
         "error.html", 
         {
@@ -70,13 +59,14 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
 async def add_security_headers(request: Request, call_next):
     response = await call_next(request)
     response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
-    # Note: logo URLs from external sources are allowed via img-src *
+    # Content Security Policy (Optimized for Cloudflare and Performance)
     response.headers["Content-Security-Policy"] = (
         "default-src 'self'; "
         "script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://unpkg.com https://cdnjs.cloudflare.com; "
         "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; "
         "font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; "
-        "img-src 'self' data: *;"
+        "img-src 'self' data: *; "
+        "connect-src 'self' *;"
     )
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["X-Content-Type-Options"] = "nosniff"
