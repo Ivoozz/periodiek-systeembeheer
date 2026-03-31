@@ -9,7 +9,6 @@ load_dotenv()
 # Database configuration
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DB_PATH = os.getenv("DATABASE_PATH", os.path.join(BASE_DIR, "data.db"))
-DATABASE_URL = f"sqlite+pysqlite3:///{DB_PATH}"
 DATABASE_KEY = os.getenv("DATABASE_KEY", "change_me_in_production")
 
 # Ensure the directory for the database exists
@@ -19,6 +18,7 @@ os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
 import pysqlite3
 
 def get_connection():
+    # Simple connection without WAL to avoid I/O issues on some LXC storage backends
     conn = pysqlite3.connect(DB_PATH, check_same_thread=False)
     # Set key immediately on raw connection
     conn.execute(f"PRAGMA key = '{DATABASE_KEY}'")
@@ -32,10 +32,10 @@ engine = create_engine(
 
 @event.listens_for(engine, "connect")
 def set_sqlite_pragma(dbapi_connection, connection_record):
-    # Pragmas already set in creator or here
     cursor = dbapi_connection.cursor()
-    cursor.execute("PRAGMA journal_mode=WAL")
-    cursor.execute("PRAGMA synchronous=NORMAL")
+    # Explicitly use DELETE mode instead of WAL to maximize compatibility
+    cursor.execute("PRAGMA journal_mode=DELETE")
+    cursor.execute("PRAGMA synchronous=FULL")
     cursor.close()
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
