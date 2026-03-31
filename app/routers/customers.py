@@ -64,21 +64,28 @@ async def create_customer(
         {"request": request, "customers": customers}
     )
 
-@router.delete("/{customer_id}", response_class=HTMLResponse)
-async def delete_customer(
+@router.post("/{customer_id}/contact", response_class=HTMLResponse)
+async def update_customer_contact(
     request: Request,
     customer_id: int,
-    db: Session = Depends(get_db)
+    contact_name: Annotated[str, Form()],
+    contact_phone: Annotated[str, Form()],
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user_required)
 ):
     customer = db.query(Customer).filter(Customer.id == customer_id).first()
     if not customer:
-        raise HTTPException(status_code=404, detail="Customer not found")
+        raise HTTPException(status_code=404, detail="Klant niet gevonden")
     
-    db.delete(customer)
+    # RBAC: Admin/Tech can edit all, Client only their own linked customer
+    if user.role != Role.ADMIN and user.role != Role.TECHNICUS:
+        if customer.user_id != user.id:
+            raise HTTPException(status_code=403, detail="Geen toestemming om deze klant te bewerken")
+
+    customer.contact_name = contact_name
+    customer.contact_phone = contact_phone
     db.commit()
     
-    customers = db.query(Customer).order_by(Customer.name).all()
-    return templates.TemplateResponse(
-        "customers_table.html",
-        {"request": request, "customers": customers}
-    )
+    # Return to the dashboard or customers table depending on where we came from
+    # For now, simple redirect
+    return RedirectResponse(url=request.headers.get("Referer", "/dashboard"), status_code=303)

@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Whitelabel Instellingen - {{ branding.brand_name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500">
+    <div>
+        <h1 class="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Portaal Personalisatie</h1>
+        <p class="text-slate-500 dark:text-slate-400 mt-1">Configureer uw whitelabel instellingen en merkidentiteit.</p>
+    </div>
+
+    <div class="glass-card overflow-hidden">
+        <div class="p-8 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <h2 class="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
+                <i class="fas fa-palette text-brand-primary"></i>
+                Merk & Stijl
+            </h2>
+            <div class="px-3 py-1 rounded-full bg-brand-primary/10 text-brand-primary text-[10px] font-black uppercase tracking-widest">
+                Admin Mode
+            </div>
+        </div>
+
+        <form action="/admin/settings" method="POST" class="p-8 space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-2">
+                    <label class="form-label">Merknaam</label>
+                    <input type="text" name="brand_name" value="{{ branding.brand_name }}" required class="form-input" placeholder="Bijv. Uw Bedrijf BV">
+                </div>
+                
+                <div class="space-y-2">
+                    <label class="form-label">Logo URL (Transparant PNG aanbevolen)</label>
+                    <input type="url" name="logo_url" value="{{ branding.logo_url or '' }}" class="form-input" placeholder="https://example.com/logo.png">
+                </div>
+
+                <div class="space-y-2">
+                    <label class="form-label">Primaire Kleur</label>
+                    <div class="flex gap-3">
+                        <input type="color" name="primary_color" value="{{ branding.primary_color }}" class="h-11 w-20 rounded-xl bg-slate-100 dark:bg-slate-800 border-none cursor-pointer">
+                        <input type="text" value="{{ branding.primary_color }}" class="form-input flex-1" readonly>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="form-label">Secundaire Kleur (Accent)</label>
+                    <div class="flex gap-3">
+                        <input type="color" name="secondary_color" value="{{ branding.secondary_color }}" class="h-11 w-20 rounded-xl bg-slate-100 dark:bg-slate-800 border-none cursor-pointer">
+                        <input type="text" value="{{ branding.secondary_color }}" class="form-input flex-1" readonly>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preview Card -->
+            <div class="mt-8 p-6 rounded-2xl bg-slate-100 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800">
+                <h3 class="text-sm font-bold text-slate-500 dark:text-slate-400 mb-4 uppercase tracking-widest">Preview</h3>
+                <div class="flex items-center gap-4">
+                    <div class="btn-ultra px-6 py-2">Test Knop</div>
+                    <div class="nav-link nav-link-active !inline-flex">Actieve Link</div>
+                    <div class="text-brand-primary font-bold">Primaire Tekst</div>
+                </div>
+            </div>
+
+            <div class="pt-6 flex justify-end">
+                <button type="submit" class="btn-ultra px-10 py-3 text-lg">
+                    <i class="fas fa-save"></i>
+                    Instellingen Opslaan
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

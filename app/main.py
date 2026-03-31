@@ -5,7 +5,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
 from app.db.database import engine, Base
 from app.db import models
-from app.routers import auth, dashboard, customers, reports, api, technician, planning
+from app.routers import auth, dashboard, customers, reports, api, technician, planning, settings
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -29,7 +29,7 @@ async def add_security_headers(request: Request, call_next):
         "script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://unpkg.com https://cdnjs.cloudflare.com; "
         "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; "
         "font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; "
-        "img-src 'self' data:;"
+        "img-src 'self' data: *;"
     )
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["X-Content-Type-Options"] = "nosniff"
@@ -49,6 +49,7 @@ app.include_router(reports.router)
 app.include_router(api.router)
 app.include_router(technician.router)
 app.include_router(planning.router)
+app.include_router(settings.router)
 
 @app.get("/")
 async def root(request: Request):
