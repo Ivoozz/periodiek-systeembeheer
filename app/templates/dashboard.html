@@ -33,44 +33,44 @@
     {% else %}
     <!-- Stats Grid -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="glass-card p-6 border-l-4 border-brand-primary overflow-hidden relative group">
+        <div class="glass-card p-8 border-l-4 border-brand-primary overflow-hidden relative group shadow-sm hover:shadow-md transition-all">
             <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-brand-primary/5 rounded-full blur-2xl group-hover:bg-brand-primary/10 transition-colors"></div>
             <div class="flex items-center justify-between relative z-10">
-                <div>
-                    <p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">
+                <div class="space-y-1">
+                    <p class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">
                         {% if user.role.value == 'Client' %}Locatie Status{% else %}Totaal Klanten{% endif %}
                     </p>
-                    <h3 class="text-4xl font-black text-slate-900 dark:text-white mt-2">
+                    <h3 class="text-4xl font-black text-slate-900 dark:text-white">
                         {% if user.role.value == 'Client' %}Actief{% else %}{{ customer_count }}{% endif %}
                     </h3>
                 </div>
-                <div class="h-14 w-14 bg-brand-primary/10 rounded-2xl flex items-center justify-center text-brand-primary shadow-inner">
+                <div class="h-14 w-14 bg-brand-primary/10 rounded-2xl flex items-center justify-center text-brand-primary shadow-inner shrink-0">
                     <i class="fas {% if user.role.value == 'Client' %}fa-location-dot{% else %}fa-users{% endif %} text-2xl"></i>
                 </div>
             </div>
         </div>
 
-        <div class="glass-card p-6 border-l-4 border-emerald-500 overflow-hidden relative group">
+        <div class="glass-card p-8 border-l-4 border-emerald-500 overflow-hidden relative group shadow-sm hover:shadow-md transition-all">
             <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-colors"></div>
             <div class="flex items-center justify-between relative z-10">
-                <div>
-                    <p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Rapportages</p>
-                    <h3 class="text-4xl font-black text-slate-900 dark:text-white mt-2">{{ report_count }}</h3>
+                <div class="space-y-1">
+                    <p class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Rapportages</p>
+                    <h3 class="text-4xl font-black text-slate-900 dark:text-white">{{ report_count }}</h3>
                 </div>
-                <div class="h-14 w-14 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-500 shadow-inner">
+                <div class="h-14 w-14 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-500 shadow-inner shrink-0">
                     <i class="fas fa-file-invoice text-2xl"></i>
                 </div>
             </div>
         </div>
 
-        <div class="glass-card p-6 border-l-4 border-amber-500 overflow-hidden relative group">
+        <div class="glass-card p-8 border-l-4 border-amber-500 overflow-hidden relative group shadow-sm hover:shadow-md transition-all">
             <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl group-hover:bg-amber-500/10 transition-colors"></div>
             <div class="flex items-center justify-between relative z-10">
-                <div>
-                    <p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Systeem Status</p>
-                    <h3 class="text-4xl font-black text-slate-900 dark:text-white mt-2">Gezond</h3>
+                <div class="space-y-1">
+                    <p class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Systeem Status</p>
+                    <h3 class="text-4xl font-black text-slate-900 dark:text-white">Gezond</h3>
                 </div>
-                <div class="h-14 w-14 bg-amber-500/10 rounded-2xl flex items-center justify-center text-amber-500 shadow-inner">
+                <div class="h-14 w-14 bg-amber-500/10 rounded-2xl flex items-center justify-center text-amber-500 shadow-inner shrink-0">
                     <i class="fas fa-check-circle text-2xl"></i>
                 </div>
             </div>
