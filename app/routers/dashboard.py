@@ -4,7 +4,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.db.models import Customer, Report, ReportStatus
-from app.core.auth import get_current_user
+from app.core.auth import get_current_user_required
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
@@ -13,7 +13,7 @@ templates = Jinja2Templates(directory="app/templates")
 async def dashboard(
     request: Request,
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user_required)
 ):
     customer_count = db.query(Customer).count()
     report_count = db.query(Report).count()

@@ -40,8 +40,3 @@ async def logout():
     response = RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
     response.delete_cookie(SESSION_COOKIE_NAME)
     return response
-
-@router.get("/dashboard", response_class=HTMLResponse)
-async def dashboard(request: Request):
-    # This is just a placeholder for now to satisfy the test
-    return templates.TemplateResponse("dashboard.html", {"request": request})

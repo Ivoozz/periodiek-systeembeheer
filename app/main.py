@@ -27,8 +27,8 @@ os.makedirs("app/static", exist_ok=True)
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 # Routers
-app.include_router(auth.router)
 app.include_router(dashboard.router)
+app.include_router(auth.router)
 app.include_router(customers.router)
 app.include_router(reports.router)
 
