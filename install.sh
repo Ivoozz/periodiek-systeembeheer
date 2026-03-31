@@ -23,6 +23,7 @@ sudo mkdir -p "$APP_DIR" "$LOG_DIR"
 echo ">>> Projectbestanden synchroniseren..."
 sudo rsync -av --exclude '.git' --exclude 'venv' --exclude '__pycache__' ./* "$APP_DIR/"
 sudo chown -R $USER_NAME:www-data "$APP_DIR"
+sudo chmod -R 775 "$APP_DIR"
 
 cd "$APP_DIR"
 
