@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Fout {{ status_code or 'Onbekend' }} - {{ branding.brand_name }}{% endblock %}
+
+{% block content %}
+<div class="min-h-[60vh] flex flex-col items-center justify-center text-center animate-in fade-in zoom-in duration-500">
+    <div class="relative mb-8">
+        <div class="absolute inset-0 bg-brand-primary/20 blur-[100px] rounded-full scale-150"></div>
+        <div class="glass-card w-32 h-32 flex items-center justify-center text-brand-primary relative z-10 mx-auto">
+            {% if status_code == 403 %}
+                <i class="fas fa-shield-halved text-5xl"></i>
+            {% elif status_code == 404 %}
+                <i class="fas fa-map-marked-alt text-5xl"></i>
+            {% else %}
+                <i class="fas fa-circle-exclamation text-5xl"></i>
+            {% endif %}
+        </div>
+    </div>
+
+    <h1 class="text-6xl font-black text-slate-900 dark:text-white mb-4 tracking-tighter">
+        {{ status_code or 'Oeps!' }}
+    </h1>
+    
+    <p class="text-xl font-bold text-slate-500 dark:text-slate-400 max-w-lg mx-auto mb-10">
+        {{ message or 'Er is iets misgegaan bij het verwerken van uw verzoek.' }}
+    </p>
+
+    <div class="flex gap-4">
+        <button onclick="window.history.back()" class="px-6 py-3 rounded-xl font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+            <i class="fas fa-arrow-left"></i> Vorige pagina
+        </button>
+        <a href="/dashboard" class="btn-ultra px-8 py-3">
+            <i class="fas fa-house"></i> Naar Dashboard
+        </a>
+    </div>
+</div>
+{% endblock %}
