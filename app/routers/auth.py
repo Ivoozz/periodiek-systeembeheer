@@ -45,14 +45,15 @@ async def login(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
     
-    # Set cookie for frontend - less restrictive for non-SSL development/LXC environments
+    # Set cookie for frontend - maximally permissive for non-SSL/LXC troubleshooting
     response.set_cookie(
         key="access_token", 
         value=f"Bearer {access_token}", 
-        httponly=True, 
+        httponly=False, # Tijdelijk uit om browser-beperkingen te omzeilen
         max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-        samesite="lax",
-        secure=False  # Cruciaal voor HTTP verbindingen
+        samesite=None,  # Laat browser zelf beslissen of forceer acceptatie
+        secure=False,
+        path="/"
     )
     
     # If it's a form request, redirect to dashboard
