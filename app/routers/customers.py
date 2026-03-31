@@ -5,17 +5,17 @@ from typing import Annotated, Optional
 
 from app.db.database import get_db
 from app.db.models import Customer, User
-from app.core.auth import get_current_user_required
+from app.core.auth import require_admin
 from fastapi.templating import Jinja2Templates
 
-router = APIRouter(prefix="/customers", tags=["customers"])
+router = APIRouter(prefix="/customers", tags=["customers"], dependencies=[Depends(require_admin)])
 templates = Jinja2Templates(directory="app/templates")
 
 @router.get("/", response_class=HTMLResponse)
 async def list_customers(
     request: Request,
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user_required),
+    user: User = Depends(require_admin),
     search: Optional[str] = None
 ):
     query = db.query(Customer)
@@ -31,7 +31,6 @@ async def list_customers(
 async def get_customers_table(
     request: Request,
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user_required),
     search: Optional[str] = None
 ):
     query = db.query(Customer)
@@ -49,8 +48,7 @@ async def create_customer(
     name: Annotated[str, Form()],
     location: Annotated[Optional[str], Form()] = None,
     contact_person: Annotated[Optional[str], Form()] = None,
-    db: Session = Depends(get_db),
-    user: User = Depends(get_current_user_required)
+    db: Session = Depends(get_db)
 ):
     new_customer = Customer(
         name=name,
@@ -71,8 +69,7 @@ async def create_customer(
 async def delete_customer(
     request: Request,
     customer_id: int,
-    db: Session = Depends(get_db),
-    user: User = Depends(get_current_user_required)
+    db: Session = Depends(get_db)
 ):
     customer = db.query(Customer).filter(Customer.id == customer_id).first()
     if not customer:

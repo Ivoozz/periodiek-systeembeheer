@@ -67,4 +67,19 @@ async def receive_external_report(
         db.add(report_item)
     
     db.commit()
+    
+    # Recurring Task Logic
+    if customer.interval_days:
+        next_date = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=customer.interval_days)
+        new_assignment = models.Assignment(
+            customer_id=customer.id,
+            technician_id=1, # Default admin
+            scheduled_date=next_date,
+            status=models.AssignmentStatus.PLANNED,
+            is_recurring=True,
+            interval_days=customer.interval_days
+        )
+        db.add(new_assignment)
+        db.commit()
+
     return {"status": "success", "report_id": report.id}

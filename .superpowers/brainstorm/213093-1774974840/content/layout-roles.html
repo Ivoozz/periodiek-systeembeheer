@@ -1,0 +1,83 @@
+<h2>Admin vs. Behandelaar Portaal</h2>
+<p class="subtitle">Hoe scheiden we de functies en de planning visueel?</p>
+
+<div class="section">
+  <h3>Perspectief A: De Admin (Jij)</h3>
+  <div class="mockup">
+    <div class="mockup-header">Admin Dashboard - Overzicht & Planning</div>
+    <div class="mockup-body">
+      <div style="display: flex; gap: 20px;">
+        <div class="mock-sidebar" style="width: 200px;">
+          <div class="label">Beheer</div>
+          <div>Dashboard</div>
+          <div style="color: var(--primary);">Planning</div>
+          <div>Klanten</div>
+          <div>Behandelaars</div>
+          <div class="label" style="margin-top: 20px;">Instellingen</div>
+        </div>
+        <div class="mock-content" style="flex: 1;">
+          <div class="cards" style="grid-template-columns: 1fr 1fr;">
+            <div class="card">
+              <div class="card-body">
+                <h3>Vandaag Gepland</h3>
+                <p>4 Rapportages door 2 behandelaars</p>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-body">
+                <h3>Openstaand</h3>
+                <p>12 Inspecties zonder behandelaar</p>
+              </div>
+            </div>
+          </div>
+          <div class="placeholder" style="height: 200px; margin-top: 20px;">
+            <strong>Plannings-Kalender</strong><br>
+            Drag & Drop klanten naar behandelaars...
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Perspectief B: De Behandelaar (Op locatie)</h3>
+  <div class="mockup">
+    <div class="mockup-header">Behandelaar Dashboard - Mobiel Gekalibreerd</div>
+    <div class="mockup-body" style="max-width: 400px; margin: 0 auto;">
+      <div class="card" style="border-left: 4px solid var(--primary);">
+        <div class="card-body">
+          <div class="label">Nu Bezig</div>
+          <h3>Klant: Test BV</h3>
+          <p>Locatie: Amsterdam</p>
+          <button class="mock-button">Start Inspectie</button>
+        </div>
+      </div>
+      <div style="margin-top: 20px;">
+        <div class="label">Volgende Opdrachten</div>
+        <div class="placeholder" style="margin-top: 5px;">Morgen: Bakkerij Jansen (10:00)</div>
+        <div class="placeholder" style="margin-top: 5px;">Morgen: Garage Piet (14:00)</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Kies je voorkeur voor de Planning-vibe:</h3>
+  <div class="options">
+    <div class="option" data-choice="calendar" onclick="toggleSelect(this)">
+      <div class="letter">1</div>
+      <div class="content">
+        <h3>Kalender Focus</h3>
+        <p>Een maand/week overzicht waar je direct ziet wie wanneer waar is.</p>
+      </div>
+    </div>
+    <div class="option" data-choice="list" onclick="toggleSelect(this)">
+      <div class="letter">2</div>
+      <div class="content">
+        <h3>Lijst/Kaarten Focus</h3>
+        <p>Een Kanban-achtig bord (To Do, In Progress, Done) per behandelaar.</p>
+      </div>
+    </div>
+  </div>
+</div>

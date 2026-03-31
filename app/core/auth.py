@@ -7,7 +7,7 @@ from passlib.context import CryptContext
 from itsdangerous import URLSafeSerializer, BadSignature
 from sqlalchemy.orm import Session
 from app.db.database import get_db
-from app.db.models import User
+from app.db.models import User, Role
 
 # Configuration
 SECRET_KEY = os.getenv("SECRET_KEY", "super-secret-key-change-it-in-production")
@@ -55,5 +55,21 @@ async def get_current_user_required(user: Annotated[Optional[User], Depends(get_
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authenticated",
             headers={"WWW-Authenticate": "Cookie"},
+        )
+    return user
+
+async def require_admin(user: User = Depends(get_current_user_required)) -> User:
+    if user.role != Role.ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Toegang geweigerd: Admin rechten vereist"
+        )
+    return user
+
+async def require_technician(user: User = Depends(get_current_user_required)) -> User:
+    if user.role != Role.TECHNICUS and user.role != Role.ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Toegang geweigerd: Technicus of Admin rechten vereist"
         )
     return user

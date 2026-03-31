@@ -3,75 +3,96 @@
 {% block title %}Nieuw Rapport - {{ customer.name }}{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto">
-    <div class="mb-6 flex items-center justify-between">
+<div class="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-            <h1 class="text-2xl font-bold text-gray-800">Nieuw Rapport</h1>
-            <p class="text-gray-600">{{ customer.name }} - {{ template.name }}</p>
+            <nav class="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">
+                <a href="/customers" class="hover:text-sky-500 transition-colors">Klanten</a>
+                <i class="fas fa-chevron-right text-[8px] opacity-50"></i>
+                <span class="text-slate-400">Nieuw Rapport</span>
+            </nav>
+            <h1 class="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Periodiek Rapport</h1>
+            <p class="text-slate-500 dark:text-slate-400 mt-1">
+                <span class="font-bold text-sky-600 dark:text-sky-400">{{ customer.name }}</span> &bull; {{ template.name }}
+            </p>
         </div>
-        <a href="/customers" class="text-blue-600 hover:underline">Terug naar klanten</a>
+        <a href="/customers" class="text-sm font-bold text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors flex items-center gap-2">
+            <i class="fas fa-arrow-left"></i> Terug
+        </a>
     </div>
 
     <form action="/reports" method="POST" class="space-y-8">
         <input type="hidden" name="customer_id" value="{{ customer.id }}">
         
         {% for category in template.categories | sort(attribute='order') %}
-        <div class="bg-white shadow rounded-lg overflow-hidden">
-            <div class="bg-gray-50 px-6 py-4 border-b">
-                <h2 class="text-lg font-semibold text-gray-800">{{ category.name }}</h2>
+        <div class="glass-card overflow-hidden">
+            <div class="bg-slate-50/50 dark:bg-slate-800/50 px-8 py-5 border-b border-slate-200 dark:border-slate-800">
+                <h2 class="text-lg font-black text-slate-900 dark:text-white flex items-center gap-3">
+                    <span class="w-2 h-6 bg-sky-500 rounded-full"></span>
+                    {{ category.name }}
+                </h2>
             </div>
-            <div class="p-6 space-y-6">
+            <div class="p-8 space-y-8">
                 {% for checkpoint in category.checkpoints %}
-                <div class="border-b last:border-0 pb-6 last:pb-0">
-                    <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                <div class="group">
+                    <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
                         <div class="flex-1">
-                            <label class="block text-md font-medium text-gray-700 mb-1">
+                            <label class="block text-lg font-bold text-slate-900 dark:text-white mb-1 group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
                                 {{ checkpoint.name }}
                             </label>
                             {% if checkpoint.description %}
-                            <p class="text-sm text-gray-500 mb-2">{{ checkpoint.description }}</p>
+                            <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">{{ checkpoint.description }}</p>
                             {% endif %}
                         </div>
                         
-                        <div class="flex flex-wrap gap-2">
-                            <label class="relative flex-1 min-w-[80px]">
+                        <div class="flex gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 h-fit">
+                            <label class="relative">
                                 <input type="radio" name="checkpoint_{{ checkpoint.id }}_result" value="OK" class="peer sr-only" required>
-                                <div class="cursor-pointer text-center py-2 px-4 rounded-md border border-gray-200 bg-white text-gray-700 peer-checked:bg-green-600 peer-checked:text-white peer-checked:border-green-600 transition-all">
+                                <div class="cursor-pointer text-center py-2 px-5 rounded-lg text-xs font-black uppercase tracking-wider text-slate-500 peer-checked:bg-emerald-500 peer-checked:text-white peer-checked:shadow-lg peer-checked:shadow-emerald-500/30 transition-all hover:bg-slate-200 dark:hover:bg-slate-700">
                                     OK
                                 </div>
                             </label>
-                            <label class="relative flex-1 min-w-[80px]">
+                            <label class="relative">
                                 <input type="radio" name="checkpoint_{{ checkpoint.id }}_result" value="NOK" class="peer sr-only">
-                                <div class="cursor-pointer text-center py-2 px-4 rounded-md border border-gray-200 bg-white text-gray-700 peer-checked:bg-red-600 peer-checked:text-white peer-checked:border-red-600 transition-all">
+                                <div class="cursor-pointer text-center py-2 px-5 rounded-lg text-xs font-black uppercase tracking-wider text-slate-500 peer-checked:bg-red-500 peer-checked:text-white peer-checked:shadow-lg peer-checked:shadow-red-500/30 transition-all hover:bg-slate-200 dark:hover:bg-slate-700">
                                     NOK
                                 </div>
                             </label>
-                            <label class="relative flex-1 min-w-[80px]">
+                            <label class="relative">
                                 <input type="radio" name="checkpoint_{{ checkpoint.id }}_result" value="NVT" class="peer sr-only" checked>
-                                <div class="cursor-pointer text-center py-2 px-4 rounded-md border border-gray-200 bg-white text-gray-700 peer-checked:bg-gray-600 peer-checked:text-white peer-checked:border-gray-600 transition-all">
+                                <div class="cursor-pointer text-center py-2 px-5 rounded-lg text-xs font-black uppercase tracking-wider text-slate-500 peer-checked:bg-slate-500 dark:peer-checked:bg-slate-600 peer-checked:text-white peer-checked:shadow-lg transition-all hover:bg-slate-200 dark:hover:bg-slate-700">
                                     NVT
                                 </div>
                             </label>
                         </div>
                     </div>
                     
-                    <div class="mt-4">
+                    <div class="mt-4 relative">
+                        <div class="absolute top-3 left-4 text-slate-400">
+                            <i class="fas fa-comment-dots text-xs"></i>
+                        </div>
                         <textarea 
                             name="checkpoint_{{ checkpoint.id }}_comment" 
                             placeholder="Optionele opmerking..." 
                             rows="2"
-                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                            class="form-input pl-10 text-sm"
                         ></textarea>
                     </div>
                 </div>
+                {% if not loop.last %}
+                <div class="border-t border-slate-100 dark:border-slate-800"></div>
+                {% endif %}
                 {% endfor %}
             </div>
         </div>
         {% endfor %}
 
-        <div class="flex justify-end pt-4">
-            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-colors text-lg w-full md:w-auto">
-                Rapport Opslaan
+        <div class="flex flex-col md:flex-row gap-4 pt-4">
+            <button type="submit" name="finalize" value="false" class="btn-ultra bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 shadow-none py-4 px-10 text-xl flex-1">
+                <i class="fas fa-file-pen"></i> Als Concept Opslaan
+            </button>
+            <button type="submit" name="finalize" value="true" class="btn-ultra py-4 px-10 text-xl flex-1">
+                <i class="fas fa-check-double"></i> Afronden & Opslaan
             </button>
         </div>
     </form>

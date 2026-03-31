@@ -1,0 +1,80 @@
+<style>
+  :root {
+    --primary: #0ea5e9;
+    --bg-dark: #020617;
+    --card-bg: rgba(15, 23, 42, 0.7);
+    --card-border: rgba(255, 255, 255, 0.1);
+  }
+  .ultra-glass {
+    background: var(--card-bg);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    box-shadow: 0 10px 40px -10px rgba(0,0,0,0.5);
+  }
+</style>
+
+<h2>Preview: Ultra Visual SaaS Portaal (v4.0)</h2>
+<p class="subtitle">Glassmorphism, High-Contrast & Mobile Optimized</p>
+
+<div class="mockup" style="background: var(--bg-dark); background-image: radial-gradient(at 0% 0%, #1e293b 0px, transparent 50%), radial-gradient(at 100% 0%, #0c4a6e 0px, transparent 50%); padding: 30px;">
+  <div class="ultra-glass" style="padding: 20px; display: flex; gap: 30px; min-height: 400px;">
+    <!-- Sidebar -->
+    <div style="width: 220px; border-right: 1px solid var(--card-border); padding-right: 20px;">
+      <div style="display: flex; items-center; gap: 10px; margin-bottom: 30px;">
+        <div style="width: 32px; height: 32px; background: var(--primary); border-radius: 8px;"></div>
+        <span style="font-weight: 900; letter-spacing: -1px; color: white;">SYSTEEMBEHEER</span>
+      </div>
+      <div class="label">Menu</div>
+      <div style="padding: 10px; border-radius: 8px; background: rgba(14, 165, 233, 0.1); color: var(--primary); font-weight: 600;">Dashboard</div>
+      <div style="padding: 10px; color: #94a3b8;">Planning</div>
+      <div style="padding: 10px; color: #94a3b8;">Klanten</div>
+      <div style="padding: 10px; color: #94a3b8;">Behandelaars</div>
+      
+      <div style="margin-top: 100px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 12px; border: 1px solid var(--card-border);">
+        <div class="label" style="font-size: 0.6rem;">Modus</div>
+        <div style="display: flex; gap: 5px; margin-top: 5px;">
+           <div style="flex:1; height: 24px; background: white; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: black; font-size: 10px;">Light</div>
+           <div style="flex:1; height: 24px; background: #0f172a; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: white; font-size: 10px; border: 1px solid var(--primary);">Dark</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Main -->
+    <div style="flex: 1;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+        <h2 style="margin: 0; color: white;">Welkom, Ivo</h2>
+        <button class="mock-button" style="border-radius: 12px; padding: 10px 20px; background: var(--primary); border: none; font-weight: bold; color: #020617;">Nieuwe Planning</button>
+      </div>
+      
+      <div class="cards" style="grid-template-columns: repeat(3, 1fr); gap: 20px;">
+        <div class="ultra-glass" style="padding: 20px; border-top: 4px solid var(--primary);">
+          <div class="label" style="color: var(--primary);">Klanten</div>
+          <h1 style="margin: 5px 0; color: white;">24</h1>
+        </div>
+        <div class="ultra-glass" style="padding: 20px; border-top: 4px solid #10b981;">
+          <div class="label" style="color: #10b981;">Gepland</div>
+          <h1 style="margin: 5px 0; color: white;">8</h1>
+        </div>
+        <div class="ultra-glass" style="padding: 20px; border-top: 4px solid #f59e0b;">
+          <div class="label" style="color: #f59e0b;">Openstaand</div>
+          <h1 style="margin: 5px 0; color: white;">3</h1>
+        </div>
+      </div>
+      
+      <div class="ultra-glass" style="margin-top: 30px; padding: 20px; min-height: 200px;">
+         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 style="margin: 0; color: white;">Kalender Overzicht</h3>
+            <div style="display: flex; gap: 10px; color: #94a3b8; font-size: 0.8rem;">
+               <span>Januari 2026</span>
+               <i class="fas fa-chevron-left"></i>
+               <i class="fas fa-chevron-right"></i>
+            </div>
+         </div>
+         <div class="placeholder" style="background: rgba(255,255,255,0.02); height: 150px; display: flex; align-items: center; justify-content: center; color: #475569;">
+            Interactieve Drag & Drop Kalender Preview...
+         </div>
+      </div>
+    </div>
+  </div>
+</div>

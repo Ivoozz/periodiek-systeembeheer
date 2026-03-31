@@ -18,6 +18,11 @@ class ReportStatus(str, enum.Enum):
     CONCEPT = "Concept"
     FINAL = "Final"
 
+class AssignmentStatus(str, enum.Enum):
+    PLANNED = "Planned"
+    COMPLETED = "Completed"
+    CANCELLED = "Cancelled"
+
 class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
@@ -32,7 +37,23 @@ class Customer(Base):
     name = Column(String, nullable=False)
     location = Column(String)
     contact_person = Column(String)
+    contact_name = Column(String)
+    contact_phone = Column(String)
+    interval_days = Column(Integer, default=30)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class Assignment(Base):
+    __tablename__ = "assignments"
+    id = Column(Integer, primary_key=True, index=True)
+    customer_id = Column(Integer, ForeignKey("customers.id"))
+    technician_id = Column(Integer, ForeignKey("users.id"))
+    scheduled_date = Column(DateTime)
+    status = Column(Enum(AssignmentStatus), default=AssignmentStatus.PLANNED)
+    is_recurring = Column(Boolean, default=False)
+    interval_days = Column(Integer, default=30)
+    
+    customer = relationship("Customer")
+    technician = relationship("User")
 
 class ChecklistTemplate(Base):
     __tablename__ = "checklist_templates"

@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block title %}Planning - Systeembeheer{% endblock %}
+
+{% block content %}
+<div x-data="{ modalOpen: false, selectedCustomer: '', selectedTech: '' }" class="space-y-8 animate-in fade-in duration-500">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+            <h1 class="text-3xl font-black text-white tracking-tight">Smart Scheduler</h1>
+            <p class="text-slate-400 mt-1">Beheer inspecties en wijs technici toe</p>
+        </div>
+        <button @click="modalOpen = true; selectedCustomer = ''; selectedTech = ''" class="btn-ultra px-6 py-3 flex items-center justify-center gap-2">
+            <i class="fas fa-calendar-plus"></i>
+            Nieuwe Opdracht
+        </button>
+    </div>
+
+    <div class="flex flex-col lg:flex-row gap-8">
+        <!-- Main Calendar Area -->
+        <div class="flex-grow space-y-6"
+             @dragover.prevent=""
+             @drop.prevent="
+                const id = $event.dataTransfer.getData('customerId');
+                if (id) {
+                    selectedCustomer = id;
+                    modalOpen = true;
+                }
+             ">
+            <div class="glass-card p-6">
+                <div class="flex items-center justify-between mb-8">
+                    <h2 class="text-xl font-bold text-white flex items-center gap-3">
+                        <i class="fas fa-list-check text-sky-500"></i>
+                        Geplande Inspecties
+                    </h2>
+                    <div class="flex items-center gap-2 text-sm">
+                        <span class="flex items-center gap-1.5 text-slate-400">
+                            <span class="w-3 h-3 rounded-full bg-sky-500/50 border border-sky-500"></span> Gepland
+                        </span>
+                        <span class="flex items-center gap-1.5 text-slate-400 ml-4">
+                            <span class="w-3 h-3 rounded-full bg-emerald-500/50 border border-emerald-500"></span> Voltooid
+                        </span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {% for assignment in assignments %}
+                    <div class="glass-card p-4 border-l-4 {% if assignment.status.value == 'Planned' %}border-sky-500{% elif assignment.status.value == 'Completed' %}border-emerald-500{% else %}border-slate-500{% endif %} hover:scale-[1.02] transition-transform duration-200">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="text-xs font-black text-sky-500 uppercase tracking-widest">
+                                {{ assignment.scheduled_date.strftime('%d %b %Y') }}
+                            </div>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-tighter 
+                                {% if assignment.status.value == 'Planned' %}bg-sky-500/10 text-sky-500 border border-sky-500/20
+                                {% elif assignment.status.value == 'Completed' %}bg-emerald-500/10 text-emerald-500 border border-emerald-500/20
+                                {% else %}bg-slate-500/10 text-slate-400 border border-slate-500/20{% endif %}">
+                                {{ assignment.status.value }}
+                            </span>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-1 leading-tight">{{ assignment.customer.name }}</h3>
+                        <div class="space-y-2 mt-4">
+                            <div class="flex items-center gap-2 text-sm text-slate-400">
+                                <div class="w-6 h-6 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-bold text-sky-400 border border-slate-700">
+                                    {{ assignment.technician.username[:2].upper() }}
+                                </div>
+                                <span>{{ assignment.technician.username }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="col-span-full py-20 text-center">
+                        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-800/50 mb-4 text-slate-600">
+                            <i class="fas fa-calendar-xmark text-2xl"></i>
+                        </div>
+                        <p class="text-slate-500 italic">Geen inspecties gevonden voor deze periode.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Waitlist Sidebar -->
+        <aside class="lg:w-80 shrink-0 space-y-6">
+            <div class="glass-card p-6 h-full">
+                <h3 class="text-lg font-bold text-white mb-6 flex items-center gap-2">
+                    <i class="fas fa-hourglass-half text-amber-500"></i>
+                    Wachtlijst
+                </h3>
+                <div class="space-y-3">
+                    {% for customer in unplanned_customers %}
+                    <div draggable="true" 
+                         @dragstart="$event.dataTransfer.setData('customerId', '{{ customer.id }}'); $event.dataTransfer.setData('customerName', '{{ customer.name }}')"
+                         class="p-4 rounded-xl bg-slate-800/50 border border-slate-700/50 hover:border-sky-500/50 hover:bg-sky-500/5 cursor-grab active:cursor-grabbing transition-all group">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-sm font-bold text-slate-200 group-hover:text-sky-400 transition-colors">{{ customer.name }}</span>
+                            <i class="fas fa-grip-vertical text-slate-600 group-hover:text-sky-500/50"></i>
+                        </div>
+                        <div class="text-[10px] text-slate-500 uppercase tracking-widest">Interval: {{ customer.interval_days or 30 }} dagen</div>
+                    </div>
+                    {% else %}
+                    <p class="text-xs text-slate-600 text-center py-8 italic border-2 border-dashed border-slate-800 rounded-xl">
+                        Alle klanten zijn ingepland.
+                    </p>
+                    {% endfor %}
+                </div>
+                
+                <div class="mt-8 p-4 rounded-xl bg-sky-500/5 border border-sky-500/10 text-[11px] text-slate-400 leading-relaxed">
+                    <i class="fas fa-info-circle text-sky-500 mr-1"></i>
+                    Sleep een klant vanuit de wachtlijst hiernaast om direct een nieuwe opdracht in te plannen.
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Nieuwe Opdracht Modal -->
+    <div x-show="modalOpen" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 scale-95"
+         x-transition:enter-end="opacity-100 scale-100"
+         class="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6"
+         @keydown.escape.window="modalOpen = false"
+         style="display: none;">
+        
+        <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-md" @click="modalOpen = false"></div>
+        
+        <div class="glass-card w-full max-w-lg relative z-10 shadow-2xl overflow-hidden border-sky-500/20">
+            <div class="p-6 border-b border-slate-800 flex justify-between items-center">
+                <h3 class="text-xl font-black text-white">Opdracht Inplannen</h3>
+                <button @click="modalOpen = false" class="text-slate-500 hover:text-white transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form hx-post="/admin/planning/assign" hx-target="body" hx-on::after-request="modalOpen = false" class="p-6 space-y-5">
+                <div>
+                    <label class="form-label">Klant</label>
+                    <select name="customer_id" x-model="selectedCustomer" required class="form-input appearance-none">
+                        <option value="">Selecteer een klant...</option>
+                        {% for customer in customers %}
+                        <option value="{{ customer.id }}">{{ customer.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="form-label">Behandelaar</label>
+                    <select name="technician_id" x-model="selectedTech" required class="form-input appearance-none">
+                        <option value="">Selecteer een technicus...</option>
+                        {% for tech in technicians %}
+                        <option value="{{ tech.id }}">{{ tech.username }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="form-label">Datum van uitvoering</label>
+                    <input type="date" name="scheduled_date" required class="form-input">
+                </div>
+
+                <div class="flex items-center gap-3 p-4 bg-slate-800/50 rounded-xl border border-slate-700">
+                    <input type="checkbox" name="is_recurring" id="is_recurring" class="w-4 h-4 rounded border-slate-700 bg-slate-900 text-sky-500 focus:ring-sky-500">
+                    <label for="is_recurring" class="text-sm font-medium text-slate-300 cursor-pointer">Terugkerende opdracht aanmaken</label>
+                </div>
+                
+                <div class="flex justify-end gap-3 pt-4">
+                    <button type="button" @click="modalOpen = false" class="px-6 py-2.5 text-sm font-bold text-slate-400 hover:text-white transition-colors">
+                        Annuleren
+                    </button>
+                    <button type="submit" class="btn-ultra px-8 py-2.5">
+                        Inplannen
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('dragover', function(e) {
+        e.preventDefault();
+    });
+    
+    // We can add specific drop logic if needed, for now just simple dragging setup
+</script>
+{% endblock %}

@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}Behandelaar Dashboard - Focus View{% endblock %}
+
+{% block mobile_title %}Mijn Planning{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Welcome Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-3xl md:text-4xl font-black tracking-tight">Focus View</h1>
+            <p class="text-slate-500 dark:text-slate-400 mt-1">Gereed voor de volgende inspectie?</p>
+        </div>
+        <div class="glass-card px-6 py-3 flex items-center gap-4">
+            <div class="w-10 h-10 rounded-full bg-sky-500 flex items-center justify-center text-white font-bold shadow-lg shadow-sky-500/30">
+                <i class="fas fa-calendar-day"></i>
+            </div>
+            <div>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Datum vandaag</p>
+                <p class="text-sm font-bold">{{ now().strftime('%d %B %Y') if now else 'Vandaag' }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Assignments List -->
+    <div class="grid grid-cols-1 gap-6">
+        {% if assignments %}
+            {% for assignment in assignments %}
+            <div class="glass-card overflow-hidden group hover:shadow-2xl transition-all duration-500">
+                <div class="p-6 md:p-8">
+                    <div class="flex flex-col md:flex-row justify-between gap-6">
+                        <div class="space-y-4 flex-grow">
+                            <!-- Customer Info -->
+                            <div>
+                                <span class="text-xs font-black text-sky-500 uppercase tracking-[0.2em]">Klant</span>
+                                <h2 class="text-2xl md:text-3xl font-black mt-1">{{ assignment.customer.name }}</h2>
+                            </div>
+
+                            <!-- Contact & Location Grid -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="space-y-3">
+                                    <div class="flex items-center gap-3 text-slate-600 dark:text-slate-300">
+                                        <div class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                                            <i class="fas fa-user text-sm"></i>
+                                        </div>
+                                        <span class="font-bold">{{ assignment.customer.contact_name or 'Niet opgegeven' }}</span>
+                                    </div>
+                                    <a href="tel:{{ assignment.customer.contact_phone }}" class="flex items-center gap-3 text-sky-500 hover:text-sky-600 transition-colors group/tel">
+                                        <div class="w-8 h-8 rounded-lg bg-sky-500/10 flex items-center justify-center group-hover/tel:bg-sky-500/20">
+                                            <i class="fas fa-phone text-sm"></i>
+                                        </div>
+                                        <span class="font-black text-lg">{{ assignment.customer.contact_phone or 'Geen nummer' }}</span>
+                                    </a>
+                                </div>
+                                
+                                <div class="space-y-3">
+                                    <a href="https://www.google.com/maps/search/?api=1&query={{ assignment.customer.location|urlencode }}" target="_blank" class="flex items-center gap-3 text-slate-600 dark:text-slate-300 hover:text-sky-500 transition-colors group/loc">
+                                        <div class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center group-hover/loc:bg-sky-500/10">
+                                            <i class="fas fa-location-dot text-sm"></i>
+                                        </div>
+                                        <span class="font-medium">{{ assignment.customer.location or 'Locatie onbekend' }}</span>
+                                    </a>
+                                    <div class="flex items-center gap-3 text-slate-500">
+                                        <div class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                                            <i class="fas fa-clock text-sm"></i>
+                                        </div>
+                                        <span class="text-sm font-bold">{{ assignment.scheduled_date.strftime('%H:%M') if assignment.scheduled_date else 'Hele dag' }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Button -->
+                        <div class="flex items-center justify-center md:border-l border-slate-200 dark:border-slate-800 md:pl-8">
+                            <a href="/reports/new/{{ assignment.customer.id }}" class="btn-ultra w-full md:w-48 py-5 text-lg shadow-sky-500/40">
+                                <i class="fas fa-clipboard-check"></i>
+                                Start Inspectie
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Decorative Bottom Bar -->
+                <div class="h-1.5 w-full bg-gradient-to-r from-sky-500 via-indigo-500 to-purple-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-700 origin-left"></div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="glass-card p-12 text-center space-y-4">
+                <div class="w-20 h-20 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-400">
+                    <i class="fas fa-clipboard-list text-3xl"></i>
+                </div>
+                <h3 class="text-xl font-bold">Geen geplande assignments</h3>
+                <p class="text-slate-500">Je hebt momenteel geen inspecties op de planning staan.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
