@@ -37,7 +37,14 @@ echo ">>> Dependencies installeren..."
 "$VENV_DIR/bin/pip" install -r requirements.txt
 
 # 3.5 Database Initialisatie
+# 3.5 Database Seeding
 echo ">>> Database initialiseren en seeden..."
+for arg in "$@"; do
+    if [ "$arg" == "--reset-db" ]; then
+        echo ">>> WAARSCHUWING: Database wordt gereset vanwege schema wijzigingen!"
+        rm -f data.db
+    fi
+done
 "$VENV_DIR/bin/python" seed.py
 
 # 4. Secrets (.env)
