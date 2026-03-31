@@ -91,7 +91,7 @@
             font-size: 0.75rem;
             font-weight: 800;
             text-transform: uppercase;
-            tracking: 0.1em;
+            letter-spacing: 0.1em;
             color: #64748b;
             margin-bottom: 0.5rem;
             margin-left: 0.25rem;
@@ -113,21 +113,13 @@
         /* Mobile specific adjustments */
         @media (max-width: 768px) {
             .glass-card { border-radius: 1rem; }
-            .content-container { padding-left: 1rem; padding-right: 1rem; }
-            table thead { display: none; } /* Hide table headers on mobile */
+            table thead { display: none; }
             table tr { display: block; margin-bottom: 1rem; border: none !important; }
             table td { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem !important; border: none !important; }
             table td::before { content: attr(data-label); font-weight: 700; font-size: 0.75rem; text-transform: uppercase; color: #94a3b8; }
         }
 
         [x-cloak] { display: none !important; }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
-        }
-        .animate-shake { animation: shake 0.2s ease-in-out 0s 2; }
     </style>
 
     <!-- Scripts (Defer for speed) -->
@@ -293,33 +285,48 @@
                 </div>
 
                 <div class="flex items-center gap-3 h-full">
-                    <!-- Global Search Button (Mobile focus) -->
-                    {% if user %}
-                    <button class="md:hidden p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
-                        <i class="fas fa-search"></i>
-                    </button>
-                    {% endif %}
-
                     <!-- Theme Toggle -->
-                    <div x-data="{ open: false }" class="relative flex items-center h-full">
-                        <button @click="open = !open" class="p-2.5 rounded-xl bg-white/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all flex items-center justify-center">
-                            <i x-show="theme === 'light'" class="fas fa-sun"></i>
-                            <i x-show="theme === 'dark'" class="fas fa-moon"></i>
-                            <i x-show="theme === 'system'" class="fas fa-desktop"></i>
+                    <div x-data="{ menuOpen: false }" class="relative flex items-center h-full">
+                        <button @click="menuOpen = !menuOpen" 
+                                class="p-2.5 rounded-xl bg-white/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all flex items-center justify-center">
+                            <i x-show="theme === 'light'" class="fas fa-sun text-amber-500"></i>
+                            <i x-show="theme === 'dark'" class="fas fa-moon text-indigo-400"></i>
+                            <i x-show="theme === 'system'" class="fas fa-desktop text-slate-400"></i>
                         </button>
-                        <div x-show="open" x-cloak @click.away="open = false" 
-                             x-transition:enter="transition ease-out duration-100"
-                             x-transition:enter-start="opacity-0 scale-95"
-                             x-transition:enter-end="opacity-100 scale-100"
-                             class="absolute right-0 top-full mt-2 w-40 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl z-50 overflow-hidden p-1.5">
-                            <button @click="setTheme('light'); open = false" class="w-full px-3 py-2 text-left text-sm rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-3 transition-colors">
-                                <i class="fas fa-sun w-4 text-amber-500 text-center"></i> Light
+                        
+                        <div x-show="menuOpen" 
+                             x-cloak
+                             @click.away="menuOpen = false"
+                             x-transition:enter="transition ease-out duration-200"
+                             x-transition:enter-start="opacity-0 scale-95 -translate-y-2"
+                             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                             x-transition:leave="transition ease-in duration-150"
+                             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                             x-transition:leave-end="opacity-0 scale-95 -translate-y-2"
+                             class="absolute right-0 top-full mt-3 w-44 glass-card shadow-2xl z-[110] overflow-hidden p-1.5 ring-1 ring-black/5">
+                            
+                            <button @click="setTheme('light'); menuOpen = false" 
+                                    class="w-full px-3 py-2.5 text-left text-sm rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-3 transition-colors group">
+                                <div class="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-500 group-hover:bg-amber-500 group-hover:text-white transition-all">
+                                    <i class="fas fa-sun"></i>
+                                </div>
+                                <span class="font-bold">Licht</span>
                             </button>
-                            <button @click="setTheme('dark'); open = false" class="w-full px-3 py-2 text-left text-sm rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-3 transition-colors">
-                                <i class="fas fa-moon w-4 text-indigo-400 text-center"></i> Dark
+                            
+                            <button @click="setTheme('dark'); menuOpen = false" 
+                                    class="w-full px-3 py-2.5 text-left text-sm rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-3 transition-colors group">
+                                <div class="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition-all">
+                                    <i class="fas fa-moon"></i>
+                                </div>
+                                <span class="font-bold">Donker</span>
                             </button>
-                            <button @click="setTheme('system'); open = false" class="w-full px-3 py-2 text-left text-sm rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-3 transition-colors">
-                                <i class="fas fa-desktop w-4 text-slate-400 text-center"></i> System
+                            
+                            <button @click="setTheme('system'); menuOpen = false" 
+                                    class="w-full px-3 py-2.5 text-left text-sm rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-3 transition-colors group">
+                                <div class="w-8 h-8 rounded-lg bg-slate-500/10 flex items-center justify-center text-slate-400 group-hover:bg-slate-500 group-hover:text-white transition-all">
+                                    <i class="fas fa-desktop"></i>
+                                </div>
+                                <span class="font-bold">Systeem</span>
                             </button>
                         </div>
                     </div>
