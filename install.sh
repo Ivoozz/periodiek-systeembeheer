@@ -112,7 +112,7 @@ Group=www-data
 WorkingDirectory=$APP_DIR
 Environment="PATH=$VENV_DIR/bin"
 Environment="PYTHONPATH=$APP_DIR"
-ExecStart=$VENV_DIR/bin/gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 127.0.0.1:8000
+ExecStart=$VENV_DIR/bin/gunicorn app.main:app -w 2 -k uvicorn.workers.UvicornWorker --bind 127.0.0.1:8000 --timeout 120
 Restart=always
 RestartSec=3
 
