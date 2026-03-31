@@ -4,11 +4,15 @@
 <div class="space-y-8">
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-            <h1 class="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Dashboard</h1>
-            <p class="text-slate-500 dark:text-slate-400 mt-1">Welkom terug bij het systeembeheer portaal.</p>
+            <h1 class="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+                {% if user.role.value == 'Client' %}Mijn Portaal{% else %}Dashboard{% endif %}
+            </h1>
+            <p class="text-slate-500 dark:text-slate-400 mt-1">
+                {% if user.role.value == 'Client' %}Welkom bij uw persoonlijke service omgeving.{% else %}Welkom terug bij het systeembeheer portaal.{% endif %}
+            </p>
         </div>
         <div class="flex items-center gap-3 px-4 py-2 glass-card rounded-xl">
-            <div class="w-8 h-8 rounded-full bg-sky-500 flex items-center justify-center text-white text-xs font-bold">
+            <div class="w-8 h-8 rounded-full bg-brand-primary flex items-center justify-center text-white text-xs font-bold shadow-lg shadow-brand-primary/40">
                 {{ user.username[0].upper() }}
             </div>
             <div class="text-sm">
@@ -18,17 +22,30 @@
         </div>
     </div>
 
+    {% if no_customer %}
+    <div class="glass-card p-12 text-center space-y-4 border-amber-500/20">
+        <div class="w-20 h-20 bg-amber-500/10 rounded-full flex items-center justify-center text-amber-500 mx-auto">
+            <i class="fas fa-exclamation-triangle text-3xl"></i>
+        </div>
+        <h2 class="text-2xl font-black">Geen Klant Gekoppeld</h2>
+        <p class="text-slate-500 max-w-md mx-auto">Uw account is nog niet gekoppeld aan een klantlocatie. Neem contact op met uw systeembeheerder.</p>
+    </div>
+    {% else %}
     <!-- Stats Grid -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="glass-card p-6 border-l-4 border-sky-500 overflow-hidden relative group">
-            <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-sky-500/5 rounded-full blur-2xl group-hover:bg-sky-500/10 transition-colors"></div>
+        <div class="glass-card p-6 border-l-4 border-brand-primary overflow-hidden relative group">
+            <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-brand-primary/5 rounded-full blur-2xl group-hover:bg-brand-primary/10 transition-colors"></div>
             <div class="flex items-center justify-between relative z-10">
                 <div>
-                    <p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Totaal Klanten</p>
-                    <h3 class="text-4xl font-black text-slate-900 dark:text-white mt-2">{{ customer_count }}</h3>
+                    <p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">
+                        {% if user.role.value == 'Client' %}Locatie Status{% else %}Totaal Klanten{% endif %}
+                    </p>
+                    <h3 class="text-4xl font-black text-slate-900 dark:text-white mt-2">
+                        {% if user.role.value == 'Client' %}Actief{% else %}{{ customer_count }}{% endif %}
+                    </h3>
                 </div>
-                <div class="h-14 w-14 bg-sky-500/10 rounded-2xl flex items-center justify-center text-sky-500 shadow-inner">
-                    <i class="fas fa-users text-2xl"></i>
+                <div class="h-14 w-14 bg-brand-primary/10 rounded-2xl flex items-center justify-center text-brand-primary shadow-inner">
+                    <i class="fas {% if user.role.value == 'Client' %}fa-location-dot{% else %}fa-users{% endif %} text-2xl"></i>
                 </div>
             </div>
         </div>
@@ -51,7 +68,7 @@
             <div class="flex items-center justify-between relative z-10">
                 <div>
                     <p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Systeem Status</p>
-                    <h3 class="text-4xl font-black text-slate-900 dark:text-white mt-2">Online</h3>
+                    <h3 class="text-4xl font-black text-slate-900 dark:text-white mt-2">Gezond</h3>
                 </div>
                 <div class="h-14 w-14 bg-amber-500/10 rounded-2xl flex items-center justify-center text-amber-500 shadow-inner">
                     <i class="fas fa-check-circle text-2xl"></i>
@@ -60,55 +77,64 @@
         </div>
     </div>
 
-    <!-- Recent Reports -->
-    <div class="glass-card overflow-hidden">
-        <div class="px-8 py-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-            <h2 class="text-xl font-black text-slate-900 dark:text-white">Recente Rapportages</h2>
-            <a href="/customers" class="btn-ultra text-xs px-4 py-2">Alle rapporten</a>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Upcoming Assignments -->
+        <div class="glass-card overflow-hidden">
+            <div class="px-8 py-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/30">
+                <h2 class="text-lg font-black text-slate-900 dark:text-white flex items-center gap-3">
+                    <i class="fas fa-calendar-check text-brand-primary"></i>
+                    Aankomend Onderhoud
+                </h2>
+            </div>
+            <div class="p-6 space-y-4">
+                {% for assignment in upcoming_assignments %}
+                <div class="flex items-center gap-4 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 hover:border-brand-primary/30 transition-all group">
+                    <div class="w-12 h-12 rounded-xl bg-brand-primary/10 flex flex-col items-center justify-center text-brand-primary">
+                        <span class="text-[10px] font-black uppercase">{{ assignment.scheduled_date.strftime('%b') }}</span>
+                        <span class="text-lg font-black leading-none">{{ assignment.scheduled_date.strftime('%d') }}</span>
+                    </div>
+                    <div class="flex-grow">
+                        <p class="font-bold text-slate-900 dark:text-white">{{ assignment.customer.name }}</p>
+                        <p class="text-xs text-slate-500">{{ assignment.scheduled_date.strftime('%Y') }} • {{ assignment.technician.username }}</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-[9px] font-black uppercase text-slate-500">
+                            Gepland
+                        </span>
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-center py-8 text-slate-500 italic text-sm">Geen onderhoud gepland.</div>
+                {% endfor %}
+            </div>
         </div>
-        <div class="overflow-x-auto">
-            <table class="w-full text-left">
-                <thead>
-                    <tr class="text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
-                        <th class="px-8 py-4 font-bold uppercase text-[10px] tracking-widest">Datum</th>
-                        <th class="px-8 py-4 font-bold uppercase text-[10px] tracking-widest">Klant</th>
-                        <th class="px-8 py-4 font-bold uppercase text-[10px] tracking-widest">Status</th>
-                        <th class="px-8 py-4 font-bold uppercase text-[10px] tracking-widest text-right">Actie</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
-                    {% for report in recent_reports %}
-                    <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors text-slate-600 dark:text-slate-300">
-                        <td class="px-8 py-5 text-sm font-medium">{{ report.date_performed.strftime('%d-%m-%Y %H:%M') }}</td>
-                        <td class="px-8 py-5">
-                            <span class="font-bold text-slate-900 dark:text-white">{{ report.customer.name }}</span>
-                        </td>
-                        <td class="px-8 py-5">
-                            <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider
-                                {% if report.status.value == 'Final' %}bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20
-                                {% else %}bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20{% endif %}">
-                                {{ report.status.value }}
-                            </span>
-                        </td>
-                        <td class="px-8 py-5 text-right">
-                            <a href="/reports/{{ report.id }}" class="text-sky-500 hover:text-sky-600 font-bold text-sm flex items-center justify-end gap-1 group">
-                                Inzien <i class="fas fa-arrow-right text-xs group-hover:translate-x-1 transition-transform"></i>
-                            </a>
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="4" class="px-8 py-16 text-center text-slate-500 italic">
-                            <div class="flex flex-col items-center gap-3">
-                                <i class="fas fa-folder-open text-4xl opacity-20"></i>
-                                <span>Geen recente rapportages gevonden.</span>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+
+        <!-- Recent Reports -->
+        <div class="glass-card overflow-hidden">
+            <div class="px-8 py-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/30">
+                <h2 class="text-lg font-black text-slate-900 dark:text-white flex items-center gap-3">
+                    <i class="fas fa-history text-emerald-500"></i>
+                    Laatste Rapportages
+                </h2>
+            </div>
+            <div class="p-6 space-y-4">
+                {% for report in recent_reports %}
+                <a href="/reports/{{ report.id }}" class="flex items-center gap-4 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all group">
+                    <div class="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+                        <i class="fas fa-file-lines"></i>
+                    </div>
+                    <div class="flex-grow">
+                        <p class="font-bold text-slate-900 dark:text-white">{{ report.customer.name }}</p>
+                        <p class="text-xs text-slate-500">{{ report.date_performed.strftime('%d-%m-%Y') }}</p>
+                    </div>
+                    <i class="fas fa-chevron-right text-slate-300 group-hover:text-brand-primary group-hover:translate-x-1 transition-all"></i>
+                </a>
+                {% else %}
+                <div class="text-center py-8 text-slate-500 italic text-sm">Geen rapportages gevonden.</div>
+                {% endfor %}
+            </div>
         </div>
     </div>
+    {% endif %}
 </div>
 {% endblock %}
