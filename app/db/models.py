@@ -8,6 +8,7 @@ from .database import Base
 class Role(str, enum.Enum):
     ADMIN = "Admin"
     TECHNICUS = "Technicus"
+    CLIENT = "Client"
 
 class ResultStatus(str, enum.Enum):
     OK = "OK"
@@ -22,6 +23,14 @@ class AssignmentStatus(str, enum.Enum):
     PLANNED = "Planned"
     COMPLETED = "Completed"
     CANCELLED = "Cancelled"
+
+class WhitelabelSettings(Base):
+    __tablename__ = "whitelabel_settings"
+    id = Column(Integer, primary_key=True, index=True)
+    brand_name = Column(String, default="Periodiek Systeembeheer")
+    logo_url = Column(String, nullable=True)
+    primary_color = Column(String, default="#3498db")
+    secondary_color = Column(String, default="#2c3e50")
 
 class User(Base):
     __tablename__ = "users"
@@ -40,7 +49,10 @@ class Customer(Base):
     contact_name = Column(String)
     contact_phone = Column(String)
     interval_days = Column(Integer, default=30)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    user = relationship("User")
 
 class Assignment(Base):
     __tablename__ = "assignments"

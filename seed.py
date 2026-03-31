@@ -1,12 +1,25 @@
 import datetime
 from sqlalchemy.orm import Session
 from app.db.database import SessionLocal, engine, Base
-from app.db.models import User, ChecklistTemplate, Category, Checkpoint, Customer, Assignment, AssignmentStatus, Role
+from app.db.models import User, ChecklistTemplate, Category, Checkpoint, Customer, Assignment, AssignmentStatus, Role, WhitelabelSettings
 from app.core.auth import get_password_hash
 
 def seed_db():
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
+
+    # 0. Whitelabel Settings
+    whitelabel = db.query(WhitelabelSettings).first()
+    if not whitelabel:
+        print(">>> Creating default whitelabel settings")
+        whitelabel = WhitelabelSettings(
+            brand_name="Periodiek Systeembeheer",
+            logo_url="/static/images/logo.png",
+            primary_color="#3498db",
+            secondary_color="#2c3e50"
+        )
+        db.add(whitelabel)
+        db.commit()
 
     # 1. Admin User
     admin = db.query(User).filter(User.username == "beheerder").first()
@@ -34,6 +47,20 @@ def seed_db():
         db.add(tech)
         db.commit()
     db.refresh(tech)
+
+    # 2b. Client User
+    client_user = db.query(User).filter(User.username == "klant1").first()
+    if not client_user:
+        print(">>> Creating default client user: klant1")
+        client_user = User(
+            username="klant1",
+            password_hash=get_password_hash("Welkom01!"),
+            role=Role.CLIENT,
+            is_active=True
+        )
+        db.add(client_user)
+        db.commit()
+    db.refresh(client_user)
 
     # 3. Default Checklist Template
     template = db.query(ChecklistTemplate).first()
@@ -67,10 +94,16 @@ def seed_db():
             location="Utrecht",
             contact_person="Jan de Groot",
             contact_name="Jan de Groot",
-            contact_phone="030-1234567"
+            contact_phone="030-1234567",
+            user_id=client_user.id
         )
         db.add(cust1)
         db.commit()
+    else:
+        if cust1.user_id is None:
+            print(">>> Linking klant1 to existing Bakkerij De Groot")
+            cust1.user_id = client_user.id
+            db.commit()
     db.refresh(cust1)
 
     cust2 = db.query(Customer).filter(Customer.name == "Slagerij Janssen").first()

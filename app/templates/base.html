@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Periodiek Systeembeheer{% endblock %}</title>
+    <title>{% block title %}{{ branding.brand_name }}{% endblock %}</title>
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,13 +17,18 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
     <style type="text/css">
+        :root {
+            --brand-primary: {{ branding.primary_color }};
+            --brand-secondary: {{ branding.secondary_color }};
+        }
+
         @theme {
+            --color-brand-primary: var(--brand-primary);
+            --color-brand-secondary: var(--brand-secondary);
             --color-slate-950: #020617;
             --color-slate-900: #0f172a;
             --color-slate-800: #1e293b;
             --color-slate-700: #334155;
-            --color-sky-500: #0ea5e9;
-            --color-sky-600: #0284c7;
             --font-sans: "Inter", "Geist", "ui-sans-serif", "system-ui";
         }
 
@@ -33,11 +38,11 @@
             }
             
             .btn-ultra {
-                @apply px-4 py-2 rounded-xl font-bold transition-all duration-300 bg-sky-500 hover:bg-sky-600 text-white shadow-lg shadow-sky-500/30 hover:shadow-sky-500/50 active:scale-95 disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2;
+                @apply px-4 py-2 rounded-xl font-bold transition-all duration-300 bg-brand-primary hover:opacity-90 text-white shadow-lg shadow-brand-primary/30 hover:shadow-brand-primary/50 active:scale-95 disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2;
             }
             
             .form-input {
-                @apply w-full bg-white/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all backdrop-blur-sm;
+                @apply w-full bg-white/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-brand-primary transition-all backdrop-blur-sm;
             }
             
             .form-label {
@@ -49,7 +54,7 @@
             }
             
             .nav-link-active {
-                @apply bg-sky-500/10 text-sky-600 dark:text-sky-400 font-bold;
+                @apply bg-brand-primary/10 text-brand-primary font-bold;
             }
             
             .nav-link-inactive {
@@ -94,9 +99,8 @@
 <body class="h-full bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased transition-colors duration-300">
     <!-- Background Gradients -->
     <div class="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div class="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] rounded-full bg-sky-500/10 dark:bg-sky-500/20 blur-[120px]"></div>
-        <div class="absolute top-[20%] -right-[10%] w-[35%] h-[35%] rounded-full bg-indigo-500/10 dark:bg-indigo-500/20 blur-[100px]"></div>
-        <div class="absolute -bottom-[10%] left-[20%] w-[30%] h-[30%] rounded-full bg-purple-500/10 dark:bg-purple-500/20 blur-[80px]"></div>
+        <div class="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] rounded-full bg-brand-primary/10 blur-[120px]"></div>
+        <div class="absolute top-[20%] -right-[10%] w-[35%] h-[35%] rounded-full bg-brand-secondary/10 blur-[100px]"></div>
     </div>
 
     <div class="min-h-full flex flex-col md:flex-row">
@@ -104,34 +108,49 @@
         <!-- Sidebar (Desktop) -->
         <aside class="hidden md:flex flex-col w-64 fixed h-screen bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border-r border-slate-200 dark:border-slate-800 z-50">
             <div class="p-6 flex items-center gap-3">
-                <div class="bg-sky-500 p-2 rounded-xl text-white shadow-lg shadow-sky-500/40">
+                {% if branding.logo_url %}
+                <img src="{{ branding.logo_url }}" alt="Logo" class="h-8 w-auto">
+                {% else %}
+                <div class="bg-brand-primary p-2 rounded-xl text-white shadow-lg shadow-brand-primary/40">
                     <i class="fas fa-server text-xl"></i>
                 </div>
-                <span class="text-xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-sky-600 to-indigo-600 dark:from-sky-400 dark:to-indigo-400">Systeembeheer</span>
+                {% endif %}
+                <span class="text-xl font-black tracking-tight text-slate-900 dark:text-white">{{ branding.brand_name }}</span>
             </div>
 
             <nav class="flex-grow px-4 space-y-2 mt-4">
+                {% if user.role.value == 'Admin' %}
                 <a href="/dashboard" class="nav-link {% if request.path == '/dashboard' %}nav-link-active{% else %}nav-link-inactive{% endif %}">
                     <i class="fas fa-house"></i> Dashboard
                 </a>
-                {% if user.role.value == 'Admin' %}
                 <a href="/admin/planning" class="nav-link {% if request.path.startswith('/admin/planning') %}nav-link-active{% else %}nav-link-inactive{% endif %}">
                     <i class="fas fa-calendar-days"></i> Planning
                 </a>
-                {% endif %}
                 <a href="/customers" class="nav-link {% if request.path.startswith('/customers') %}nav-link-active{% else %}nav-link-inactive{% endif %}">
                     <i class="fas fa-users"></i> Klanten
                 </a>
+                <a href="/admin/settings" class="nav-link {% if request.path.startswith('/admin/settings') %}nav-link-active{% else %}nav-link-inactive{% endif %}">
+                    <i class="fas fa-cog"></i> Instellingen
+                </a>
+                {% elif user.role.value == 'Technicus' %}
+                <a href="/behandelaar/dashboard" class="nav-link {% if request.path == '/behandelaar/dashboard' %}nav-link-active{% else %}nav-link-inactive{% endif %}">
+                    <i class="fas fa-house"></i> Dashboard
+                </a>
+                {% elif user.role.value == 'Client' %}
+                <a href="/dashboard" class="nav-link {% if request.path == '/dashboard' %}nav-link-active{% else %}nav-link-inactive{% endif %}">
+                    <i class="fas fa-house"></i> Mijn Portaal
+                </a>
+                {% endif %}
             </nav>
 
             <div class="p-4 border-t border-slate-200 dark:border-slate-800 space-y-4">
                 <div class="flex items-center gap-3 px-2">
-                    <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center text-white font-bold">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-brand-primary to-brand-secondary flex items-center justify-center text-white font-bold">
                         {{ user.username[0].upper() }}
                     </div>
                     <div class="flex-grow overflow-hidden">
                         <p class="text-sm font-bold truncate">{{ user.username }}</p>
-                        <p class="text-xs text-slate-500 dark:text-slate-400 truncate">Administrator</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 truncate">{{ user.role.value }}</p>
                     </div>
                 </div>
                 <form action="/logout" method="POST">
@@ -149,11 +168,15 @@
             <header class="sticky top-0 z-40 bg-white/60 dark:bg-slate-950/60 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 h-16 flex items-center justify-between px-6">
                 <div class="flex items-center gap-4">
                     {% if not user %}
-                    <a href="/dashboard" class="flex items-center gap-3">
-                        <div class="bg-sky-500 p-1.5 rounded-lg text-white">
+                    <a href="/" class="flex items-center gap-3">
+                        {% if branding.logo_url %}
+                        <img src="{{ branding.logo_url }}" alt="Logo" class="h-6 w-auto">
+                        {% else %}
+                        <div class="bg-brand-primary p-1.5 rounded-lg text-white">
                             <i class="fas fa-server"></i>
                         </div>
-                        <span class="text-lg font-bold">Systeembeheer</span>
+                        {% endif %}
+                        <span class="text-lg font-bold">{{ branding.brand_name }}</span>
                     </a>
                     {% else %}
                     <h2 class="md:hidden text-lg font-bold truncate">{% block mobile_title %}Dashboard{% endblock %}</h2>
@@ -203,17 +226,17 @@
             {% if user %}
             <!-- Bottom Nav (Mobile Only) -->
             <nav class="md:hidden fixed bottom-6 left-6 right-6 h-16 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl z-50 flex items-center justify-around px-2">
-                <a href="/dashboard" class="flex flex-col items-center justify-center w-full h-full {% if request.path == '/dashboard' %}text-sky-500{% else %}text-slate-400{% endif %}">
+                <a href="/dashboard" class="flex flex-col items-center justify-center w-full h-full {% if request.path == '/dashboard' %}text-brand-primary{% else %}text-slate-400{% endif %}">
                     <i class="fas fa-house text-xl"></i>
                     <span class="text-[10px] font-bold mt-1">Home</span>
                 </a>
                 {% if user.role.value == 'Admin' %}
-                <a href="/admin/planning" class="flex flex-col items-center justify-center w-full h-full {% if request.path.startswith('/admin/planning') %}text-sky-500{% else %}text-slate-400{% endif %}">
+                <a href="/admin/planning" class="flex flex-col items-center justify-center w-full h-full {% if request.path.startswith('/admin/planning') %}text-brand-primary{% else %}text-slate-400{% endif %}">
                     <i class="fas fa-calendar-days text-xl"></i>
-                    <span class="text-[10px] font-bold mt-1">Planning</span>
+                    <span class="text-[10px] font-bold mt-1">Plan</span>
                 </a>
                 {% endif %}
-                <a href="/customers" class="flex flex-col items-center justify-center w-full h-full {% if request.path.startswith('/customers') %}text-sky-500{% else %}text-slate-400{% endif %}">
+                <a href="/customers" class="flex flex-col items-center justify-center w-full h-full {% if request.path.startswith('/customers') %}text-brand-primary{% else %}text-slate-400{% endif %}">
                     <i class="fas fa-users text-xl"></i>
                     <span class="text-[10px] font-bold mt-1">Klanten</span>
                 </a>
@@ -229,14 +252,18 @@
             <!-- Footer (Desktop) -->
             <footer class="hidden md:block py-8 border-t border-slate-200 dark:border-slate-800">
                 <div class="max-w-7xl mx-auto px-6 flex justify-between items-center text-sm text-slate-400">
-                    <p>&copy; 2026 Systeembeheer v4.0 <span class="text-sky-500 font-bold">Ultra Visual</span></p>
+                    <p>&copy; 2026 {{ branding.brand_name }} <span class="text-brand-primary font-bold">Ultra Visual</span></p>
                     <div class="flex items-center gap-6">
-                        <span class="flex items-center gap-2"><i class="fas fa-bolt text-sky-500"></i> Adaptive Engine</span>
+                        <span class="flex items-center gap-2"><i class="fas fa-bolt text-brand-primary"></i> whitelabel-engine</span>
                     </div>
                 </div>
             </footer>
         </div>
     </div>
+
+    <!-- Animation Engine -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="/static/js/animations.js"></script>
 
     {% block scripts %}{% endblock %}
 </body>

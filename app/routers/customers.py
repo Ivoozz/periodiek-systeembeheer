@@ -6,10 +6,9 @@ from typing import Annotated, Optional
 from app.db.database import get_db
 from app.db.models import Customer, User
 from app.core.auth import require_admin
-from fastapi.templating import Jinja2Templates
+from app.core.templates import templates
 
 router = APIRouter(prefix="/customers", tags=["customers"], dependencies=[Depends(require_admin)])
-templates = Jinja2Templates(directory="app/templates")
 
 @router.get("/", response_class=HTMLResponse)
 async def list_customers(

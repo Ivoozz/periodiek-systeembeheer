@@ -10,9 +10,9 @@ from app.db.database import get_db
 from app.db import models
 from app.core.auth import get_current_user_required
 from app.services.export_service import generate_word_report
+from app.core.templates import templates
 
 router = APIRouter(prefix="/reports", tags=["reports"])
-templates = Jinja2Templates(directory="app/templates")
 
 @router.get("/new/{customer_id}", response_class=HTMLResponse)
 async def new_report_form(

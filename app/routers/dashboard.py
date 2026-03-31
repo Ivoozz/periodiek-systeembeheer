@@ -5,9 +5,9 @@ from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.db.models import Customer, Report, ReportStatus, Role, Assignment, AssignmentStatus
 from app.core.auth import get_current_user_required
+from app.core.templates import templates
 
 router = APIRouter()
-templates = Jinja2Templates(directory="app/templates")
 
 @router.get("/dashboard", response_class=HTMLResponse)
 async def dashboard(

@@ -6,9 +6,9 @@ from app.db.database import get_db
 from app.db.models import User, Role
 from app.core.auth import verify_password, create_session_cookie, SESSION_COOKIE_NAME
 from app.core.security import RateLimiter
+from app.core.templates import templates
 
 router = APIRouter()
-templates = Jinja2Templates(directory="app/templates")
 
 login_rate_limiter = RateLimiter(limit=5, window=60)
 

@@ -4,12 +4,10 @@ from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.db.models import User, Role, Customer, Assignment, AssignmentStatus
 from app.core.auth import require_admin
-from fastapi.templating import Jinja2Templates
+from app.core.templates import templates
 from datetime import datetime
 
 router = APIRouter(prefix="/admin/planning", tags=["planning"], dependencies=[Depends(require_admin)])
-
-templates = Jinja2Templates(directory="app/templates")
 
 @router.get("/", response_class=HTMLResponse)
 async def get_planning(
