@@ -19,11 +19,11 @@ os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
 import pysqlite3
 
 def get_connection():
-    conn = pysqlite3.connect(DB_PATH)
+    conn = pysqlite3.connect(DB_PATH, check_same_thread=False)
     return conn
 
 engine = create_engine(
-    "sqlite://", # We use a dummy URL because we provide the creator
+    DATABASE_URL, 
     creator=get_connection,
     connect_args={"check_same_thread": False}
 )
