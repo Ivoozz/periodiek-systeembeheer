@@ -37,7 +37,7 @@ fi
 ./venv/bin/pip install -r requirements.txt
 
 # 5. Secrets (.env)
-if [ ! -f .env ] || [ "$FORCE_REFRESH" = true ]; then
+if [ ! -f .env ]; then
     echo ">>> Secrets genereren..."
     cat << EOF > .env
 DATABASE_KEY=$(openssl rand -hex 32)
@@ -46,7 +46,10 @@ SERVICE_API_TOKEN=$(openssl rand -hex 24)
 ADMIN_PASSWORD=Welkom01!
 APP_ENV=production
 EOF
+else
+    echo ">>> Bestaande .env behouden (veilig voor updates)."
 fi
+
 
 # 6. Database initialiseren
 echo ">>> Database initialiseren..."

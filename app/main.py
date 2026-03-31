@@ -94,11 +94,11 @@ app.include_router(customers.router)
 app.include_router(dashboard.router)
 
 @app.get("/")
-async def root(request: Request, db: Session = Depends(get_db)):
+async def root(request: Request):
     token = request.cookies.get("access_token")
-    if not token:
-        return RedirectResponse(url="/login")
-    return RedirectResponse(url="/dashboard")
+    if token:
+        return RedirectResponse(url="/dashboard")
+    return RedirectResponse(url="/login")
 
 @app.get("/login")
 async def login_page(request: Request, db: Session = Depends(get_db)):
