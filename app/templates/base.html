@@ -2,7 +2,7 @@
 <html lang="nl" class="h-full" x-data="themeManager()" :class="{ 'dark': isDark }">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>{% block title %}{{ branding.brand_name }}{% endblock %}</title>
     
     <!-- PERFORMANCE: Prefetch Critical Scripts -->
@@ -38,8 +38,11 @@
             --brand-secondary: {{ branding.secondary_color or '#6366f1' }};
         }
 
-        /* Base Speed Optimization: System Fonts */
-        body { font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif; }
+        /* Base Speed Optimization & Mobile UX Fixes */
+        body { 
+            font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
 
         .glass-card {
             background: rgba(255, 255, 255, 0.7);
@@ -56,25 +59,29 @@
         .btn-ultra {
             background-color: var(--brand-primary);
             color: white;
-            padding: 0.6rem 1.5rem;
+            padding: 0.75rem 1.5rem;
             border-radius: 0.85rem;
             font-weight: 700;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 0.5rem;
             box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.15);
+            min-height: 44px; /* Better touch target */
         }
         .btn-ultra:hover { transform: translateY(-1px); box-shadow: 0 10px 20px -2px rgba(0, 0, 0, 0.2); }
+        .btn-ultra:active { transform: scale(0.96); }
 
         .form-input {
             width: 100%;
             background: rgba(255, 255, 255, 0.5);
             border: 1px solid #e2e8f0;
             border-radius: 0.85rem;
-            padding: 0.6rem 1rem;
+            padding: 0.75rem 1rem;
             outline: none;
             transition: all 0.2s;
+            font-size: 16px !important; /* Prevents iOS auto-zoom */
         }
         .dark .form-input { background: rgba(30, 41, 59, 0.5); border-color: #334155; color: white; }
         .form-input:focus { border-color: var(--brand-primary); box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.2); }
@@ -90,6 +97,16 @@
             font-weight: 500;
         }
         .nav-link-active { background-color: rgba(14, 165, 233, 0.1); color: var(--brand-primary); font-weight: 700; }
+
+        /* Mobile specific adjustments */
+        @media (max-width: 768px) {
+            .glass-card { border-radius: 1rem; }
+            .content-container { padding-left: 1rem; padding-right: 1rem; }
+            table thead { display: none; } /* Hide table headers on mobile */
+            table tr { display: block; margin-bottom: 1rem; border: none !important; }
+            table td { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem !important; border: none !important; }
+            table td::before { content: attr(data-label); font-weight: 700; font-size: 0.75rem; text-transform: uppercase; color: #94a3b8; }
+        }
 
         [x-cloak] { display: none !important; }
     </style>
@@ -129,7 +146,7 @@
     </script>
     {% block head %}{% endblock %}
 </head>
-<body class="h-full bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased transition-colors duration-300 overflow-x-hidden">
+<body class="h-full bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased transition-colors duration-300 overflow-x-hidden pb-20 md:pb-0">
     <!-- Optimized Background Gradients -->
     <div class="fixed inset-0 -z-10 pointer-events-none">
         <div class="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] rounded-full opacity-[0.07] blur-[120px]" style="background-color: var(--brand-primary);"></div>
@@ -138,7 +155,7 @@
 
     <div class="min-h-full flex flex-col md:flex-row">
         {% if user %}
-        <!-- Sidebar -->
+        <!-- Sidebar (Desktop) -->
         <aside class="hidden md:flex flex-col w-64 fixed h-screen bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border-r border-slate-200 dark:border-slate-800 z-50">
             <div class="p-6 flex items-center gap-3">
                 {% if branding.logo_url %}
@@ -193,13 +210,51 @@
                 </form>
             </div>
         </aside>
+
+        <!-- Bottom Nav (Mobile) -->
+        <nav class="md:hidden fixed bottom-0 left-0 right-0 h-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-t border-slate-200 dark:border-slate-800 z-[100] flex items-center justify-around px-4">
+            {% if user.role.value == 'Admin' %}
+            <a href="/dashboard" class="flex flex-col items-center gap-1 transition-all active:scale-90 {% if request.path == '/dashboard' %}text-brand-primary{% else %}text-slate-400{% endif %}">
+                <i class="fas fa-house text-xl"></i>
+                <span class="text-[10px] font-bold">Home</span>
+            </a>
+            <a href="/admin/planning" class="flex flex-col items-center gap-1 transition-all active:scale-90 {% if request.path.startswith('/admin/planning') %}text-brand-primary{% else %}text-slate-400{% endif %}">
+                <i class="fas fa-calendar-days text-xl"></i>
+                <span class="text-[10px] font-bold">Plan</span>
+            </a>
+            <a href="/customers" class="flex flex-col items-center gap-1 transition-all active:scale-90 {% if request.path.startswith('/customers') %}text-brand-primary{% else %}text-slate-400{% endif %}">
+                <i class="fas fa-users text-xl"></i>
+                <span class="text-[10px] font-bold">Klanten</span>
+            </a>
+            <a href="/admin/settings" class="flex flex-col items-center gap-1 transition-all active:scale-90 {% if request.path.startswith('/admin/settings') %}text-brand-primary{% else %}text-slate-400{% endif %}">
+                <i class="fas fa-cog text-xl"></i>
+                <span class="text-[10px] font-bold">Instel</span>
+            </a>
+            {% elif user.role.value == 'Technicus' %}
+            <a href="/behandelaar/dashboard" class="flex flex-col items-center gap-1 transition-all active:scale-90 {% if request.path == '/behandelaar/dashboard' %}text-brand-primary{% else %}text-slate-400{% endif %}">
+                <i class="fas fa-house text-xl"></i>
+                <span class="text-[10px] font-bold">Werklijst</span>
+            </a>
+            {% elif user.role.value == 'Client' %}
+            <a href="/dashboard" class="flex flex-col items-center gap-1 transition-all active:scale-90 {% if request.path == '/dashboard' %}text-brand-primary{% else %}text-slate-400{% endif %}">
+                <i class="fas fa-house text-xl"></i>
+                <span class="text-[10px] font-bold">Mijn Portaal</span>
+            </a>
+            {% endif %}
+            <form action="/logout" method="POST" class="flex flex-col items-center">
+                <button type="submit" class="flex flex-col items-center gap-1 text-red-400 active:scale-90">
+                    <i class="fas fa-right-from-bracket text-xl"></i>
+                    <span class="text-[10px] font-bold">Uit</span>
+                </button>
+            </form>
+        </nav>
         {% endif %}
 
         <!-- Main Wrapper -->
         <div class="flex-1 flex flex-col {% if user %}md:pl-64{% endif %} min-h-screen">
             <!-- Header -->
             <header class="sticky top-0 z-40 bg-white/60 dark:bg-slate-950/60 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 h-16 flex items-center justify-between px-6">
-                <div class="flex items-center gap-4">
+                <div class="flex items-center gap-4 overflow-hidden">
                     {% if not user %}
                     <a href="/" class="flex items-center gap-3">
                         {% if branding.logo_url %}
@@ -209,14 +264,22 @@
                             <i class="fas fa-server"></i>
                         </div>
                         {% endif %}
-                        <span class="text-lg font-bold">{{ branding.brand_name }}</span>
+                        <span class="text-lg font-bold truncate">{{ branding.brand_name }}</span>
                     </a>
                     {% else %}
-                    <h2 class="md:hidden text-lg font-bold truncate">{% block mobile_title %}Dashboard{% endblock %}</h2>
+                    <h2 class="text-lg font-black truncate max-w-[200px]">{% block mobile_title %}{{ branding.brand_name }}{% endblock %}</h2>
                     {% endif %}
                 </div>
 
-                <div class="flex items-center gap-4">
+                <div class="flex items-center gap-3">
+                    <!-- Global Search Button (Mobile focus) -->
+                    {% if user %}
+                    <button class="md:hidden p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    {% endif %}
+
+                    <!-- Theme Toggle -->
                     <div x-data="{ open: false }" class="relative">
                         <button @click="open = !open" class="p-2.5 rounded-xl bg-white/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all">
                             <i x-show="theme === 'light'" class="fas fa-sun"></i>
@@ -238,7 +301,7 @@
                 </div>
             </header>
 
-            <main class="flex-grow p-6 pb-24 md:pb-6">
+            <main class="flex-grow p-4 md:p-8">
                 <div class="max-w-7xl mx-auto">
                     {% block content %}{% endblock %}
                 </div>

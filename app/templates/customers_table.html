@@ -1,43 +1,47 @@
 {% for customer in customers %}
-<tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors text-slate-600 dark:text-slate-300 group">
-    <td class="px-8 py-5">
+<tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors text-slate-600 dark:text-slate-300 group border-b border-slate-100 dark:border-slate-800 md:border-none">
+    <td class="px-8 py-5" data-label="Naam">
         <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-lg bg-brand-primary/10 flex items-center justify-center text-brand-primary font-bold group-hover:scale-110 transition-transform">
+            <div class="w-8 h-8 rounded-lg bg-brand-primary/10 flex items-center justify-center text-brand-primary font-bold group-hover:scale-110 transition-transform flex-shrink-0">
                 {{ customer.name[0].upper() }}
             </div>
-            <span class="font-bold text-slate-900 dark:text-white">{{ customer.name }}</span>
+            <span class="font-bold text-slate-900 dark:text-white truncate">{{ customer.name }}</span>
         </div>
     </td>
-    <td class="px-8 py-5 text-sm font-medium">{{ customer.location or '-' }}</td>
-    <td class="px-8 py-5 text-sm font-medium">
+    <td class="px-8 py-5 text-sm font-medium" data-label="Locatie">
+        <span class="truncate">{{ customer.location or '-' }}</span>
+    </td>
+    <td class="px-8 py-5 text-sm font-medium" data-label="Contact">
         <div class="space-y-1">
             <div class="flex items-center gap-2">
                 <i class="fas fa-user text-[10px] text-slate-400"></i>
-                {{ customer.contact_name or customer.contact_person or '-' }}
+                <span class="truncate">{{ customer.contact_name or customer.contact_person or '-' }}</span>
             </div>
             {% if customer.contact_phone %}
-            <div class="flex items-center gap-2 text-xs text-slate-500">
+            <a href="tel:{{ customer.contact_phone }}" class="flex items-center gap-2 text-xs text-brand-primary hover:underline">
                 <i class="fas fa-phone text-[9px]"></i>
                 {{ customer.contact_phone }}
-            </div>
+            </a>
             {% endif %}
         </div>
     </td>
-    <td class="px-8 py-5 text-right">
+    <td class="px-8 py-5 text-right" data-label="Acties">
         <div class="flex items-center justify-end gap-2">
             <button @click="editContactModalOpen = true; editCustomerId = {{ customer.id }}; editContactName = '{{ customer.contact_name or customer.contact_person or '' }}'; editContactPhone = '{{ customer.contact_phone or '' }}'"
-                    class="p-2 rounded-lg text-slate-400 hover:bg-brand-primary/10 hover:text-brand-primary transition-all" title="Contact">
+                    class="p-3 md:p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-brand-primary/10 hover:text-brand-primary transition-all" title="Contact">
                 <i class="fas fa-address-book"></i>
             </button>
-            <button class="p-2 rounded-lg text-slate-400 hover:bg-sky-500/10 hover:text-sky-600 dark:hover:text-sky-400 transition-all" title="Bewerken">
+            <button class="p-3 md:p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-sky-500/10 hover:text-sky-600 dark:hover:text-sky-400 transition-all" title="Bewerken">
                 <i class="fas fa-edit"></i>
             </button>
+            {% if user.role.value == 'Admin' %}
             <button hx-delete="/customers/{{ customer.id }}" 
                     hx-target="#customer-table" 
                     hx-confirm="Weet u zeker dat u {{ customer.name }} wilt verwijderen?"
-                    class="p-2 rounded-lg text-slate-400 hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400 transition-all" title="Verwijderen">
+                    class="p-3 md:p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400 transition-all" title="Verwijderen">
                 <i class="fas fa-trash-alt"></i>
             </button>
+            {% endif %}
         </div>
     </td>
 </tr>
