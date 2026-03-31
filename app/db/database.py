@@ -22,19 +22,19 @@ def get_connection():
     conn = pysqlite3.connect(DB_PATH, check_same_thread=False)
     conn.execute(f"PRAGMA key = '{DATABASE_KEY}'")
     # PERFORMANCE: Optimize SQLite for LXC
-    conn.execute("PRAGMA journal_mode=DELETE")
+    conn.execute("PRAGMA journal_mode=WAL") # Use WAL for better concurrency
     conn.execute("PRAGMA synchronous=NORMAL")
     conn.execute("PRAGMA cache_size=-64000") # 64MB Cache
     conn.execute("PRAGMA temp_store=MEMORY")
     return conn
 
-# PERFORMANCE: Use StaticPool to keep the connection open across the lifetime of the worker
-# This avoids the overhead of SQLCipher decryption on every single DB hit.
+# PERFORMANCE: Use a small pool to balance decryption overhead and concurrency
 engine = create_engine(
     "sqlite://", 
     creator=get_connection,
     connect_args={"check_same_thread": False},
-    poolclass=StaticPool
+    pool_size=5,
+    max_overflow=10
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

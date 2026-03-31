@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Request, Form, HTTPException, status
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from app.db.database import get_db
-from app.db.models import WhitelabelSettings, User
+from app.db.models import WhitelabelSettings, User, AuditLog
 from app.core.auth import require_admin
 from app.core.templates import templates
 
@@ -41,10 +41,20 @@ async def update_settings(
         settings = WhitelabelSettings()
         db.add(settings)
     
+    old_name = settings.brand_name
     settings.brand_name = brand_name
     settings.logo_url = logo_url
     settings.primary_color = primary_color
     settings.secondary_color = secondary_color
+    
+    # Audit Log
+    db.add(AuditLog(
+        user_id=admin.id,
+        action="UPDATE",
+        target_type="WhitelabelSettings",
+        target_id=settings.id or 0,
+        details=f"Branding gewijzigd: {old_name} -> {brand_name}"
+    ))
     
     db.commit()
     

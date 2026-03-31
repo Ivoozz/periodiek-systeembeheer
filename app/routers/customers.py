@@ -76,7 +76,8 @@ async def create_customer(
     name: Annotated[str, Form()],
     location: Annotated[Optional[str], Form()] = None,
     contact_person: Annotated[Optional[str], Form()] = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin)
 ):
     new_customer = Customer(
         name=name,
@@ -89,7 +90,7 @@ async def create_customer(
     
     # Audit Log
     db.add(AuditLog(
-        user_id=user.id,
+        user_id=admin.id,
         action="CREATE",
         target_type="Customer",
         target_id=new_customer.id,
@@ -121,8 +122,21 @@ async def update_customer_contact(
         if customer.user_id != user.id:
             raise HTTPException(status_code=403, detail="Geen toestemming om deze klant te bewerken")
 
+    old_contact_name = customer.contact_name
+    old_contact_phone = customer.contact_phone
+    
     customer.contact_name = contact_name
     customer.contact_phone = contact_phone
+    
+    # Audit Log
+    db.add(AuditLog(
+        user_id=user.id,
+        action="UPDATE",
+        target_type="Customer",
+        target_id=customer.id,
+        details=f"Contact gewijzigd: {old_contact_name} -> {contact_name}, {old_contact_phone} -> {contact_phone}"
+    ))
+    
     db.commit()
     
     # Return to the dashboard or customers table depending on where we came from

@@ -5,6 +5,8 @@ from app.db.database import get_db
 import datetime
 from sqlalchemy.sql import func
 from app.db.models import Customer, Report, Role, Assignment
+from app.core.auth import get_current_user_required
+from app.core.templates import templates
 
 router = APIRouter()
 
