@@ -3,12 +3,25 @@
  * "Ultra Visual" Animation Engine (GSAP powered)
  */
 
+console.log("PS-Engine: Animation Engine Loading...");
+
 document.addEventListener('DOMContentLoaded', () => {
-    initAnimations();
+    console.log("PS-Engine: DOM Ready, initializing animations...");
+    try {
+        if (typeof gsap === 'undefined') {
+            console.error("PS-Engine: GSAP not found! Animations disabled.");
+            return;
+        }
+        initAnimations();
+        console.log("PS-Engine: Animations initialized successfully.");
+    } catch (e) {
+        console.error("PS-Engine: Error during init:", e);
+    }
 });
 
 // HTMX Sync: Re-apply to injected content
 document.body.addEventListener('htmx:afterSwap', (evt) => {
+    console.log("PS-Engine: HTMX Swap detected, re-init animations...");
     initAnimations(evt.detail.elt);
 });
 
