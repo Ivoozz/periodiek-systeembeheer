@@ -67,7 +67,7 @@ async def get_customers_table(
     customers = query.order_by(Customer.name).all()
     return templates.TemplateResponse(
         "customers_table.html",
-        {"request": request, "customers": customers, "user": current_user}
+        {"request": request, "customers": customers, "user": user}
     )
 
 @router.post("/", response_class=HTMLResponse)
@@ -101,7 +101,7 @@ async def create_customer(
     customers = db.query(Customer).order_by(Customer.name).all()
     return templates.TemplateResponse(
         "customers_table.html",
-        {"request": request, "customers": customers, "user": current_user}
+        {"request": request, "customers": customers, "user": user}
     )
 
 @router.post("/{customer_id}/contact", response_class=HTMLResponse)
