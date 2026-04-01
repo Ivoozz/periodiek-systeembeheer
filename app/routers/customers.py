@@ -70,6 +70,7 @@ async def get_customers_table(
         {"request": request, "customers": customers, "user": user}
     )
 
+
 @router.post("/", response_class=HTMLResponse)
 async def create_customer(
     request: Request,
@@ -103,6 +104,7 @@ async def create_customer(
         "customers_table.html",
         {"request": request, "customers": customers, "user": user}
     )
+
 
 @router.post("/{customer_id}/contact", response_class=HTMLResponse)
 async def update_customer_contact(
