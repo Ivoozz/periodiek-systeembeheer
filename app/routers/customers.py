@@ -52,6 +52,7 @@ async def list_customers(
 async def get_customers_table(
     request: Request,
     db: Session = Depends(get_db),
+    user: User = Depends(require_admin),
     search: Optional[str] = None,
     location: Optional[str] = None,
     contact: Optional[str] = None
@@ -67,9 +68,8 @@ async def get_customers_table(
     customers = query.order_by(Customer.name).all()
     return templates.TemplateResponse(
         "customers_table.html",
-        {"request": request, "customers": customers, "user": current_user}
+        {"request": request, "customers": customers, "user": user}
     )
-
 
 @router.post("/", response_class=HTMLResponse)
 async def create_customer(
@@ -102,9 +102,8 @@ async def create_customer(
     customers = db.query(Customer).order_by(Customer.name).all()
     return templates.TemplateResponse(
         "customers_table.html",
-        {"request": request, "customers": customers, "user": current_user}
+        {"request": request, "customers": customers, "user": admin}
     )
-
 
 @router.post("/{customer_id}/contact", response_class=HTMLResponse)
 async def update_customer_contact(
@@ -124,8 +123,8 @@ async def update_customer_contact(
         if customer.user_id != user.id:
             raise HTTPException(status_code=403, detail="Geen toestemming om deze klant te bewerken")
 
-    old_contact_name = customer.contact_name
-    old_contact_phone = customer.contact_phone
+    old_contact_name = getattr(customer, 'contact_name', 'N/A')
+    old_contact_phone = getattr(customer, 'contact_phone', 'N/A')
     
     customer.contact_name = contact_name
     customer.contact_phone = contact_phone
@@ -141,6 +140,4 @@ async def update_customer_contact(
     
     db.commit()
     
-    # Return to the dashboard or customers table depending on where we came from
-    # For now, simple redirect
     return RedirectResponse(url=request.headers.get("Referer", "/dashboard"), status_code=303)
