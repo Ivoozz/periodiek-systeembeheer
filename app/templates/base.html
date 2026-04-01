@@ -76,9 +76,21 @@
 
         [x-cloak] { display: none !important; }
 
+        /* FIXED LAYOUT ENGINE */
+        .app-shell-guest { min-height: 100vh; display: flex; flex-direction: column; }
+        
         @media (min-width: 768px) {
-            .app-shell { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
-            .sidebar-fixed { position: sticky; top: 0; height: 100vh; }
+            .app-shell-auth { 
+                display: grid; 
+                grid-template-columns: 260px 1fr; 
+                min-height: 100vh; 
+            }
+            .sidebar-fixed { 
+                position: sticky; 
+                top: 0; 
+                height: 100vh; 
+                overflow-y: auto;
+            }
         }
 
         /* Mobile specific adjustments */
@@ -119,7 +131,6 @@
             }
         }
 
-        // Global Toast Notification Manager
         window.notify = (message, type = 'success') => {
             window.dispatchEvent(new CustomEvent('notify', { detail: { message, type } }));
         }
@@ -135,26 +146,18 @@
             <div x-transition:enter="transition ease-out duration-300"
                  x-transition:enter-start="opacity-0 translate-x-12 scale-95"
                  x-transition:enter-end="opacity-100 translate-x-0 scale-100"
-                 x-transition:leave="transition ease-in duration-200"
-                 x-transition:leave-start="opacity-100 scale-100"
-                 x-transition:leave-end="opacity-0 scale-90"
                  class="glass-card !bg-white/90 dark:!bg-slate-900/90 shadow-2xl p-4 min-w-[300px] flex items-center gap-4 border-l-4 pointer-events-auto"
                  :class="toast.type === 'success' ? 'border-emerald-500' : 'border-red-500'">
                 <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
                      :class="toast.type === 'success' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'">
                     <i class="fas" :class="toast.type === 'success' ? 'fa-check-circle' : 'fa-circle-exclamation'"></i>
                 </div>
-                <div class="flex-grow">
-                    <p class="font-bold text-sm" x-text="toast.message"></p>
-                </div>
-                <button @click="toasts = toasts.filter(t => t.id !== toast.id)" class="text-slate-400 hover:text-slate-600">
-                    <i class="fas fa-times text-xs"></i>
-                </button>
+                <div class="flex-grow text-sm font-bold" x-text="toast.message"></div>
             </div>
         </template>
     </div>
 
-    <div class="app-shell">
+    <div class="{% if user %}app-shell-auth{% else %}app-shell-guest{% endif %}">
         {% if user %}
         <!-- Sidebar -->
         <aside class="sidebar-fixed hidden md:flex flex-col bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border-r border-slate-200 dark:border-slate-800 z-50">
@@ -178,11 +181,11 @@
             </nav>
 
             <div class="p-4 border-t border-slate-200 dark:border-slate-800 space-y-4">
-                <a href="/profile" class="flex items-center gap-3 px-2 group transition-all">
+                <a href="/profile" class="flex items-center gap-3 px-2 group">
                     <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold bg-brand-primary shadow-lg group-hover:scale-110 transition-transform">{{ user.username[0].upper() }}</div>
                     <div class="overflow-hidden">
                         <p class="text-sm font-bold truncate group-hover:text-brand-primary transition-colors">{{ user.display_name or user.username }}</p>
-                        <p class="text-[10px] text-slate-500 uppercase font-black">Mijn Profiel</p>
+                        <p class="text-[10px] text-slate-500 uppercase font-black tracking-widest">Mijn Profiel</p>
                     </div>
                 </a>
                 <form action="/logout" method="POST">
@@ -202,41 +205,35 @@
             <a href="/profile" class="flex flex-col items-center gap-0.5 {% if request.path == '/profile' %}text-brand-primary{% else %}text-slate-400{% endif %}"><i class="fas fa-user text-xl"></i><span class="text-[10px] font-bold">Ik</span></a>
             {% endif %}
             <form action="/logout" method="POST" class="flex flex-col items-center">
-                <button type="submit" class="flex flex-col items-center gap-0.5 text-red-400">
-                    <i class="fas fa-right-from-bracket text-xl"></i><span class="text-[10px] font-bold">Uit</span>
-                </button>
+                <button type="submit" class="flex flex-col items-center gap-0.5 text-red-400"><i class="fas fa-right-from-bracket text-xl"></i><span class="text-[10px] font-bold">Uit</span></button>
             </form>
         </nav>
         {% endif %}
 
-        <div class="flex flex-col min-h-screen overflow-hidden">
+        <div class="flex flex-col min-h-screen">
             <!-- Header -->
             <header class="sticky top-0 z-40 bg-white/60 dark:bg-slate-950/60 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 h-16 flex items-center justify-between px-6 shrink-0">
-                <div class="flex items-center gap-4 overflow-hidden h-full">
-                    <h2 class="text-xl font-black tracking-tight truncate">{% block mobile_title %}{{ branding.brand_name }}{% endblock %}</h2>
-                </div>
+                <h2 class="text-xl font-black tracking-tight truncate">{% block mobile_title %}{{ branding.brand_name }}{% endblock %}</h2>
 
-                <div class="flex items-center gap-3">
-                    <div x-data="{ menuOpen: false }" class="relative flex items-center h-full">
-                        <button @click="menuOpen = !menuOpen" class="p-2 w-10 h-10 rounded-xl bg-white/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 transition-all flex items-center justify-center">
-                            <i x-show="theme === 'light'" class="fas fa-sun text-amber-500"></i>
-                            <i x-show="theme === 'dark'" class="fas fa-moon text-indigo-400"></i>
-                            <i x-show="theme === 'system'" class="fas fa-desktop"></i>
+                <div x-data="{ menuOpen: false }" class="relative flex items-center">
+                    <button @click="menuOpen = !menuOpen" class="p-2 w-10 h-10 rounded-xl bg-white/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 transition-all flex items-center justify-center">
+                        <i x-show="theme === 'light'" class="fas fa-sun text-amber-500"></i>
+                        <i x-show="theme === 'dark'" class="fas fa-moon text-indigo-400"></i>
+                        <i x-show="theme === 'system'" class="fas fa-desktop"></i>
+                    </button>
+                    <div x-show="menuOpen" x-cloak @click.away="menuOpen = false" x-transition class="absolute right-0 top-full mt-2 w-44 glass-card shadow-2xl z-[110] overflow-hidden p-1.5 border border-slate-200 dark:border-slate-700">
+                        <button @click="setTheme('light'); menuOpen = false" class="w-full px-3 py-2.5 text-left text-sm rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-3 transition-colors group">
+                            <div class="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-500 group-hover:bg-amber-500 group-hover:text-white transition-all"><i class="fas fa-sun"></i></div>
+                            <span class="font-bold">Licht</span>
                         </button>
-                        <div x-show="menuOpen" x-cloak @click.away="menuOpen = false" x-transition class="absolute right-0 top-full mt-2 w-44 glass-card shadow-2xl z-[110] overflow-hidden p-1.5 border border-slate-200 dark:border-slate-700">
-                            <button @click="setTheme('light'); menuOpen = false" class="w-full px-3 py-2.5 text-left text-sm rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-3 transition-colors group">
-                                <div class="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-500 group-hover:bg-amber-500 group-hover:text-white transition-all"><i class="fas fa-sun"></i></div>
-                                <span class="font-bold">Licht</span>
-                            </button>
-                            <button @click="setTheme('dark'); menuOpen = false" class="w-full px-3 py-2.5 text-left text-sm rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-3 transition-colors group">
-                                <div class="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition-all"><i class="fas fa-moon"></i></div>
-                                <span class="font-bold">Donker</span>
-                            </button>
-                            <button @click="setTheme('system'); menuOpen = false" class="w-full px-3 py-2.5 text-left text-sm rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-3 transition-colors group">
-                                <div class="w-8 h-8 rounded-lg bg-slate-500/10 flex items-center justify-center text-slate-400 group-hover:bg-slate-500 group-hover:text-white transition-all"><i class="fas fa-desktop"></i></div>
-                                <span class="font-bold">Systeem</span>
-                            </button>
-                        </div>
+                        <button @click="setTheme('dark'); menuOpen = false" class="w-full px-3 py-2.5 text-left text-sm rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-3 transition-colors group">
+                            <div class="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition-all"><i class="fas fa-moon"></i></div>
+                            <span class="font-bold">Donker</span>
+                        </button>
+                        <button @click="setTheme('system'); menuOpen = false" class="w-full px-3 py-2.5 text-left text-sm rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-3 transition-colors group">
+                            <div class="w-8 h-8 rounded-lg bg-slate-500/10 flex items-center justify-center text-slate-400 group-hover:bg-slate-500 group-hover:text-white transition-all"><i class="fas fa-desktop"></i></div>
+                            <span class="font-bold">Systeem</span>
+                        </button>
                     </div>
                 </div>
             </header>
